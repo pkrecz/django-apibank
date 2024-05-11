@@ -1,0 +1,9 @@
+*.pyc
+*~
+__pycache__
+apibankenv
+apibankdb
+/static/
+settings.py
+.DS_Store
+/.idea
