@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from django.urls import path, include
-from django.urls import reverse_lazy
 from rest_framework import routers
 from .views import CustomerViewSet, AccountViewSet, AccountTypeViewSet, ParameterViewSet
 
@@ -15,5 +14,5 @@ router.register(r'parameter', ParameterViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace = 'rest_framework')),      
+    path('api-auth/', include('rest_framework.urls', namespace = 'rest_framework')),
 ]

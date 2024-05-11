@@ -1,5 +1,6 @@
-from rest_framework import status, viewsets
-from rest_framework import filters
+from rest_framework import viewsets
+from rest_framework import status
+from rest_framework import filters 
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters import rest_framework as django_filters
@@ -15,6 +16,7 @@ from .serializers import (
 """ Customized class """
 class AccountTypeFilter(django_filters.FilterSet):
     search = django_filters.CharFilter(field_name='Code', lookup_expr="istartswith")
+
 
 
 """ Customer """
