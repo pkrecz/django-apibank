@@ -17,26 +17,26 @@ class CustomerCUPSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CustomerModel
         fields = '__all__'
-        read_only_fields = ('Created_date', 'Created_employee')
+        read_only_fields = ('created_date', 'created_employee')
 
 
 class CustomerLRDSerializer(serializers.HyperlinkedModelSerializer):
     """ Actions: list & retrieve & destroy """
 
-    Account = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='accountmodel-detail')
+    account = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='accountmodel-detail')
             
     class Meta:
         model = CustomerModel
         fields = [
-                    'url', 'First_name', 'Last_name',
-                    'Address', 'Postal_code', 'City',
-                    'Pesel', 'Birth_date', 'Birth_city', 'Identification',
-                    'Created_date', 'Created_employee', 'Account']
+                    'url', 'first_name', 'last_name',
+                    'address', 'postal_code', 'city',
+                    'pesel', 'birth_date', 'birth_city', 'identification',
+                    'created_date', 'created_employee', 'account']
 
     def to_representation(self, instance):
         
         representation = super().to_representation(instance)
-        representation['Full_name'] = instance.First_name + ' ' + instance.Last_name
+        representation['full_name'] = instance.first_name + ' ' + instance.last_name
         return representation
 
 
@@ -47,21 +47,21 @@ class AccountCUPSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = AccountModel
         fields = '__all__'
-        read_only_fields = ('Number_IBAN', 'Balance', 'Free_balance', 'Created_date', 'Created_employee')
+        read_only_fields = ('number_iban', 'balance', 'free_balance', 'created_date', 'created_employee')
 
 
 class AccountLRDSerializer(serializers.HyperlinkedModelSerializer):
     """ Actions: list & retrieve & destroy """
 
-    Generate_link = HyperlinkedGenerate(view_name='accountmodel-detail')
+    generate_link = HyperlinkedGenerate(view_name='accountmodel-detail')
 
     class Meta:
         model = AccountModel
         fields = [
-                    'url', 'Number_IBAN', 'Generate_link',
-                    'Balance', 'Debit', 'Free_balance', 'Percent',
-                    'Created_date', 'Created_employee',
-                    'Account_type', 'Customer']
+                    'url', 'number_iban', 'generate_link',
+                    'balance', 'debit', 'free_balance', 'percent',
+                    'created_date', 'created_employee',
+                    'account_type', 'customer']
         depth = 1
 
 

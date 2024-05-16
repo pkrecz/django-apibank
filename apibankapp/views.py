@@ -15,7 +15,7 @@ from .serializers import (
 
 """ Customized class """
 class AccountTypeFilter(django_filters.FilterSet):
-    search = django_filters.CharFilter(field_name='Code', lookup_expr="istartswith")
+    search = django_filters.CharFilter(field_name='code', lookup_expr="istartswith")
 
 
 
@@ -24,8 +24,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     queryset = CustomerModel.objects.all()
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['Pesel', 'Identification']
-    ordering_fields = ['Last_name']
+    search_fields = ['pesel', 'identification']
+    ordering_fields = ['last_name']
         
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_udpate']:
@@ -34,7 +34,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return CustomerLRDSerializer
     
     def perform_create(self, serializer):
-            return serializer.save(Created_employee=self.request.user)
+            return serializer.save(created_employee=self.request.user)
 
 
 """ Account """
@@ -49,26 +49,26 @@ class AccountViewSet(viewsets.ModelViewSet):
             return AccountLRDSerializer
     
     def perform_create(self, serializer):
-            return serializer.save(Created_employee=self.request.user)
+            return serializer.save(created_employee=self.request.user)
 
 
     @action(detail=True, methods=['get', 'patch'])
     def generate(self, request, pk=None):
 
         instance = self.get_object()
-        if not instance.Number_IBAN:
+        if not instance.number_iban:
             # Preparing IBAN
-            account = str(instance.Id_account)
-            customer = str(instance.Customer_id)
-            country_code = ParameterModel.objects.get().Country_code
-            bank_number = ParameterModel.objects.get().Bank_number
-            subaccount = AccountTypeModel.objects.get(Id_account_type=instance.Account_type_id).Subaccount
+            account = str(instance.id_account)
+            customer = str(instance.customer_id)
+            country_code = ParameterModel.objects.get().country_code
+            bank_number = ParameterModel.objects.get().bank_number
+            subaccount = AccountTypeModel.objects.get(id_account_type=instance.account_type_id).subaccount
             prefix_zero = ''
             while len(customer) + len(account) + len(prefix_zero) < 12:
                 prefix_zero = prefix_zero + '0'
             iban = country_code + bank_number + subaccount + account + prefix_zero + customer
             
-            serializer = AccountLRDSerializer(instance, data={'Number_IBAN': iban}, partial=True)
+            serializer = AccountLRDSerializer(instance, data={'number_iban': iban}, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(AccountLRDSerializer(instance, context={'request': request}).data)
@@ -85,7 +85,7 @@ class AccountTypeViewSet(viewsets.ModelViewSet):
     serializer_class = AccountTypeSerializer
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     filterset_class = AccountTypeFilter
-    ordering_fields = ['Code']
+    ordering_fields = ['code']
 
 
 """ Parameter """
