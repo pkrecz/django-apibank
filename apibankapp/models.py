@@ -9,42 +9,30 @@ class CustomerModel(models.Model):
     """ Customer Model """
 
     id_customer = models.AutoField(
-                                primary_key=True,
-                                verbose_name='Id customer')
+                                primary_key=True)
     first_name = models.CharField(
-                                max_length=100,
-                                verbose_name='First name')
+                                max_length=100)
     last_name = models.CharField(
-                                max_length=100,
-                                verbose_name='Last name')
+                                max_length=100)
     address = models.CharField(
-                                max_length=100,
-                                verbose_name='Address')
+                                max_length=100)
     postal_code = models.CharField(
                                 max_length=6,
-                                validators=[RegexValidator(regex='^[0-9]{2}-[0-9]{3}$')],
-                                verbose_name='Postal code')
+                                validators=[RegexValidator(regex='^[0-9]{2}-[0-9]{3}$')])
     city = models.CharField(
-                                max_length=100,
-                                verbose_name='City')
+                                max_length=100)
     pesel = models.CharField(
                                 max_length=11,
-                                validators=[RegexValidator(regex='^[0-9]{11}$')],
-                                verbose_name='PESEL')
-    birth_date = models.DateField(
-                                verbose_name='Birth day')
+                                validators=[RegexValidator(regex='^[0-9]{11}$')])
+    birth_date = models.DateField()
     birth_city = models.CharField(
-                                max_length=100,
-                                verbose_name='Birth city')
+                                max_length=100)
     identification = models.CharField(
-                                max_length=9,
-                                verbose_name='Identification')
+                                max_length=9)
     created_date = models.DateTimeField(
-                                auto_now_add=True,
-                                verbose_name='Created date')
+                                auto_now_add=True)
     created_employee = models.CharField(
-                                max_length=50,
-                                verbose_name='Employee')
+                                max_length=50)
 
     def save(self, *args, **kwargs):
         self.identification = self.identification.upper()
@@ -55,72 +43,59 @@ class AccountModel(models.Model):
     """ Account Model """
 
     id_account = models.AutoField(
-                                primary_key=True,
-                                verbose_name='Id account')
+                                primary_key=True)
     number_iban = models.CharField(
                                 max_length=28,
-                                blank=True,
-                                verbose_name='IBAN number')
+                                blank=True)
     balance = models.DecimalField(
                                 max_digits=12,
                                 decimal_places=2,
-                                default=0,
-                                verbose_name='Balance')
+                                default=0)
     debit = models.DecimalField(
                                 max_digits=12,
                                 decimal_places=2,
                                 default=0,
-                                validators=[MinValueValidator(0)],
-                                verbose_name='Debit')
+                                validators=[MinValueValidator(0)])
     free_balance = models.DecimalField(
                                 max_digits=12,
                                 decimal_places=2,
-                                default=0,
-                                verbose_name='Free balance')
+                                default=0)
     percent = models.DecimalField(
                                 max_digits=4,
                                 decimal_places=2,
                                 default=0,
-                                validators=[MinValueValidator(0)],
-                                verbose_name='Percent')
+                                validators=[MinValueValidator(0)])
     created_date = models.DateTimeField(
-                                auto_now_add=True,
-                                verbose_name='Created date')
+                                auto_now_add=True)
     created_employee = models.CharField(
-                                max_length=50,
-                                verbose_name='Employee')
+                                max_length=50)
 
     account_type = models.ForeignKey('AccountTypeModel', on_delete=models.PROTECT)
     customer = models.ForeignKey('CustomerModel', related_name='Account', on_delete=models.PROTECT)
 
     def clean(self):
         if self.free_balance < 0:
-            raise ValidationError({'Free balance': ['Value operation out of limit.']})
+            raise ValidationError({'error': 'Value operation out of limit!'})
 
 
 class AccountTypeModel(models.Model):
     """ AccountType Model """
 
     id_account_type = models.AutoField(
-                                primary_key=True,
-                                verbose_name='Id account type')
+                                primary_key=True)
     code = models.CharField(
                                 unique=True,
                                 max_length=4,
-                                verbose_name='Code',
                                 validators=[RegexValidator(regex='^[a-zA-Z]{1}-[0-9]{2}$')])
     description = models.CharField(
-                                max_length=100,
-                                verbose_name='Description')
+                                max_length=100)
     subaccount = models.CharField(
                                 max_length=6,
-                                verbose_name='Subaccount',
                                 validators=[RegexValidator(regex='^[0-9]{6}$')])
     percent = models.DecimalField(
                                 max_digits=4,
                                 decimal_places=2,
                                 default=0,
-                                verbose_name='Percent',
                                 validators=[MinValueValidator(0)])
 
     def save(self, *args, **kwargs):
@@ -154,25 +129,19 @@ class OperationModel(models.Model):
                     (2, 'Withdrawal')]
 
     id_operation = models.AutoField(
-                                primary_key=True,
-                                verbose_name='Id operation')
+                                primary_key=True)
     type_operation = models.IntegerField(
-                                choices=type_choice,
-                                verbose_name='Type operation')
+                                choices=type_choice)
     value_operation = models.DecimalField(
                                 max_digits=12,
                                 decimal_places=2,
-                                default=0,
-                                verbose_name='Value operation')
+                                default=0)
     balance_after_operation = models.DecimalField(
                                 max_digits=12,
-                                decimal_places=2,
-                                verbose_name='Balance after operation')
+                                decimal_places=2)
     operation_date = models.DateTimeField(
-                                auto_now_add=True,
-                                verbose_name='Operation date')
+                                auto_now_add=True)
     operation_employee = models.CharField(
-                                max_length=50,
-                                verbose_name='Employee')
+                                max_length=50)
     
     id_account = models.ForeignKey('AccountModel', on_delete=models.PROTECT)
