@@ -73,10 +73,6 @@ class AccountModel(models.Model):
     account_type = models.ForeignKey('AccountTypeModel', on_delete=models.PROTECT)
     customer = models.ForeignKey('CustomerModel', related_name='Account', on_delete=models.PROTECT)
 
-    def clean(self):
-        if self.free_balance < 0:
-            raise ValidationError({'error': 'Value operation out of limit!'})
-
 
 class AccountTypeModel(models.Model):
     """ AccountType Model """

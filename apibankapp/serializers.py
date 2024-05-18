@@ -1,5 +1,5 @@
-from .models import CustomerModel, ParameterModel, AccountModel, AccountTypeModel
 from rest_framework import serializers
+from .models import CustomerModel, ParameterModel, AccountModel, AccountTypeModel, OperationModel
 
 
 """ Customized class """
@@ -65,6 +65,20 @@ class AccountLRDSerializer(serializers.HyperlinkedModelSerializer):
         depth = 1
 
 
+class AccountOperationSerializer(serializers.HyperlinkedModelSerializer):
+    """ Action: Update data after transaction """
+
+    class Meta:
+        model = AccountModel
+        fields = [
+                    'balance', 'free_balance', 'debit']
+    
+    def validate(self, data):
+        if data['free_balance'] < 0:
+            raise serializers.ValidationError({'error': 'Value operation out of limit!'})
+        return data
+
+
 """ Account Type """
 class AccountTypeSerializer(serializers.HyperlinkedModelSerializer):
 
@@ -79,3 +93,27 @@ class ParameterSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ParameterModel
         fields = '__all__'
+
+
+""" Operation """
+class OperationNewSerializer(serializers.HyperlinkedModelSerializer):
+    """ Actions: new operation for account """
+
+    class Meta:
+        model = OperationModel
+        fields = '__all__'
+        read_only_fields = ('id_operation', 'balance_after_operation', 'operation_date', 'operation_employee', 'id_account')
+
+
+class OperationHistorySerializer(serializers.HyperlinkedModelSerializer):
+    """ Actions: list of history  """
+
+    type_operation = serializers.CharField(source='get_type_operation_display')
+
+    class Meta:
+        model = OperationModel
+        fields = [
+                    'id_operation', 'type_operation',
+                    'value_operation', 'balance_after_operation',
+                    'operation_date', 'operation_employee']
+

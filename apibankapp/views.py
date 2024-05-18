@@ -5,12 +5,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters import rest_framework as django_filters
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import CustomerModel, AccountModel, AccountTypeModel, ParameterModel
+from .models import CustomerModel, AccountModel, AccountTypeModel, ParameterModel, OperationModel
 from .serializers import (
                             CustomerCUPSerializer, CustomerLRDSerializer,
-                            AccountCUPSerializer, AccountLRDSerializer,
+                            AccountCUPSerializer, AccountLRDSerializer, AccountOperationSerializer,
                             AccountTypeSerializer,
-                            ParameterSerializer)
+                            ParameterSerializer,
+                            OperationNewSerializer, OperationHistorySerializer)
 
 
 """ Customized class """
@@ -34,7 +35,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return CustomerLRDSerializer
     
     def perform_create(self, serializer):
-            return serializer.save(created_employee=self.request.user)
+            serializer.validated_data['created_employee'] = self.request.user
+            return serializer.save()
 
 
 """ Account """
@@ -43,13 +45,16 @@ class AccountViewSet(viewsets.ModelViewSet):
     queryset = AccountModel.objects.all()
     
     def get_serializer_class(self):
+        if self.action == 'newoperation':
+            return OperationNewSerializer
         if self.action in ['create', 'update', 'partial_udpate']:
             return AccountCUPSerializer
         else:
             return AccountLRDSerializer
     
     def perform_create(self, serializer):
-            return serializer.save(created_employee=self.request.user)
+            serializer.validated_data['created_employee'] = self.request.user
+            return serializer.save()
 
 
     @action(detail=True, methods=['get', 'patch'])
@@ -73,9 +78,57 @@ class AccountViewSet(viewsets.ModelViewSet):
                 serializer.save()
                 return Response(AccountLRDSerializer(instance, context={'request': request}).data)
             else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'status': 'IBAN number already exist.'})
+        
+    @action(detail=True, methods=['get', 'post'])
+    def newoperation(self, request, pk=None):
+        
+        instance = self.get_object()
+        if request.method == 'POST': 
+            serializer = OperationNewSerializer(data=request.data)
+            if serializer.is_valid(raise_exception=True):
+
+                # Operation type
+                if serializer.validated_data['type_operation'] == 2:
+                    serializer.validated_data['value_operation'] = serializer.validated_data['value_operation'] * (-1)
+
+                # Data from AccountModel
+                var_balance = AccountModel.objects.get(id_account=instance.id_account).balance
+                var_debit = AccountModel.objects.get(id_account=instance.id_account).debit
+    
+                # Set up balance & free_balance after transaction
+                var_balance_after_operation = var_balance + serializer.validated_data['value_operation']
+                var_free_balance_after_operation = var_balance_after_operation + var_debit
+                
+                # Updating balance & free balance for AccountModel
+                data = {
+                        'balance': var_balance_after_operation,
+                        'free_balance': var_free_balance_after_operation}
+                serializer_account = AccountOperationSerializer(instance, data=data, partial=True)
+                if serializer_account.is_valid(raise_exception=True):
+                    serializer_account.save()
+
+                # New object in OperationModel
+                serializer.validated_data['id_account'] = instance
+                serializer.validated_data['balance_after_operation'] = var_balance_after_operation
+                serializer.validated_data['operation_employee'] = self.request.user
+                serializer.save()
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(AccountLRDSerializer(instance, context={'request': request}).data)
+
+
+    @action(detail=True, methods=['get'])
+    def history(self, request, pk=None):
+
+        instance = self.get_object()
+        queryset = OperationModel.objects.filter(id_account=instance.id_account).order_by('-operation_date')
+        serializer = OperationHistorySerializer(queryset, context={'request': request}, many=True)
+        return Response(data=serializer.data)
 
 
 """ Account Type """
@@ -94,4 +147,3 @@ class ParameterViewSet(viewsets.ModelViewSet):
     queryset = ParameterModel.objects.all()
     serializer_class = ParameterSerializer
     http_method_names = ['get', 'put', 'patch']
-
