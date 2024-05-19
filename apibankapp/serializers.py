@@ -49,6 +49,20 @@ class AccountCUPSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
         read_only_fields = ('number_iban', 'balance', 'free_balance', 'created_date', 'created_employee')
 
+    def to_internal_value(self, data):
+        data['free_balance'] = round(data['free_balance'],2) 
+        self.fields['free_balance'].read_only = False
+        return super().to_internal_value(data)
+
+    def to_representation(self, instance):
+        self.fields['free_balance'].read_only = True
+        return super().to_representation(instance)
+
+    def validate(self, data):
+        if data['free_balance'] < 0:
+            raise serializers.ValidationError({'error': 'Free balance out of limit!'})
+        return data
+
 
 class AccountLRDSerializer(serializers.HyperlinkedModelSerializer):
     """ Actions: list & retrieve & destroy """
@@ -72,10 +86,10 @@ class AccountOperationSerializer(serializers.HyperlinkedModelSerializer):
         model = AccountModel
         fields = [
                     'balance', 'free_balance', 'debit']
-    
+
     def validate(self, data):
         if data['free_balance'] < 0:
-            raise serializers.ValidationError({'error': 'Value operation out of limit!'})
+            raise serializers.ValidationError({'error': 'Value operation out of balance limit!'})
         return data
 
 
