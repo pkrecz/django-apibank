@@ -7,19 +7,15 @@ from .serializers import RegisterSerializer
 
 @api_view(['POST',])
 def logout_view(request):
-
     if request.method == 'POST':
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
 
-
 @api_view(['POST',])
 def register_view(request):
-
     if request.method == 'POST':
         serializer = RegisterSerializer(data=request.data)
         data = {}
-
         if serializer.is_valid():
             account = serializer.save()
             data['response'] = 'Registration done!'
@@ -29,5 +25,5 @@ def register_view(request):
             data['token'] = token.key
         else:
             data = serializer.errors
-
         return Response(data)
+    

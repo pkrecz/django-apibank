@@ -5,8 +5,10 @@ from django.core.validators import RegexValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 
 
+"""
+Customer Model
+"""
 class CustomerModel(models.Model):
-    """ Customer Model """
 
     id_customer = models.AutoField(
                                 primary_key=True)
@@ -39,8 +41,10 @@ class CustomerModel(models.Model):
         super().save(*args, **kwargs)
 
 
+"""
+Account Model
+"""
 class AccountModel(models.Model):
-    """ Account Model """
 
     id_account = models.AutoField(
                                 primary_key=True)
@@ -74,8 +78,10 @@ class AccountModel(models.Model):
     customer = models.ForeignKey('CustomerModel', related_name='Account', on_delete=models.PROTECT)
 
 
+"""
+AccountType Model
+"""
 class AccountTypeModel(models.Model):
-    """ AccountType Model """
 
     id_account_type = models.AutoField(
                                 primary_key=True)
@@ -99,8 +105,10 @@ class AccountTypeModel(models.Model):
         super().save(*args, **kwargs)
 
 
+"""
+Parameter Model
+"""
 class ParameterModel(models.Model):
-    """ Parameter Model """
 
     id_parameter = models.AutoField(
                                 primary_key=True)
@@ -116,8 +124,10 @@ class ParameterModel(models.Model):
         super().save(*args, **kwargs)
 
 
+"""
+Operation Model
+"""
 class OperationModel(models.Model):
-    """ Operation Model """
 
     type_choice = [
                     ('', '--------'),
