@@ -49,28 +49,48 @@ class CustomerLRDSerializer(serializers.HyperlinkedModelSerializer):
 """
 Account
 """
-class AccountCUPSerializer(serializers.HyperlinkedModelSerializer):
+class AccountCreateSerializer(serializers.HyperlinkedModelSerializer):
     """
-    Actions: create & update & partial_udpate
+    Actions: create
     """
 
     class Meta:
         model = AccountModel
-        fields = '__all__'
-        read_only_fields = ('number_iban', 'balance', 'free_balance', 'created_date', 'created_employee')
+        fields = [
+                    'url', 'number_iban',
+                    'balance', 'debit', 'free_balance', 'percent',
+                    'created_date', 'created_employee',
+                    'account_type', 'customer']
+        read_only_fields = (
+                            'number_iban', 'balance', 'free_balance',
+                            'created_date', 'created_employee')
 
-    def to_internal_value(self, data):
-        data['free_balance'] = round(data['free_balance'],2) 
-        self.fields['free_balance'].read_only = False
-        return super().to_internal_value(data)
 
-    def to_representation(self, instance):
-        self.fields['free_balance'].read_only = True
-        return super().to_representation(instance)
+class AccountUPSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    Actions: update & partial_udpate
+    """
+
+    class Meta:
+        model = AccountModel
+        fields = [
+                    'url', 'number_iban',
+                    'balance', 'debit', 'free_balance', 'percent',
+                    'created_date', 'created_employee',
+                    'account_type', 'customer']
+        read_only_fields = (
+                            'number_iban', 'balance', 'free_balance',
+                            'created_date', 'created_employee',
+                            'account_type', 'customer')
     
     def validate_free_balance(self, value):
         if value < 0:
             raise serializers.ValidationError('Free balance out of limit!')
+        return value
+    
+    def validate_number_iban(self, value):
+        if len(value) != 28:
+            raise serializers.ValidationError('IBAN should have 28 characters!')
         return value
 
 
@@ -88,7 +108,7 @@ class AccountLRDSerializer(serializers.HyperlinkedModelSerializer):
                     'created_date', 'created_employee',
                     'account_type', 'customer']
         depth = 1
-
+    
 
 class AccountOperationSerializer(serializers.HyperlinkedModelSerializer):
     """

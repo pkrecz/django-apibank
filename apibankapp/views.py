@@ -10,7 +10,7 @@ from collections import OrderedDict
 from .models import CustomerModel, AccountModel, AccountTypeModel, ParameterModel, OperationModel
 from .serializers import (
                             CustomerCUPSerializer, CustomerLRDSerializer,
-                            AccountCUPSerializer, AccountLRDSerializer, AccountOperationSerializer,
+                            AccountCreateSerializer, AccountUPSerializer, AccountLRDSerializer, AccountOperationSerializer,
                             AccountTypeSerializer,
                             ParameterSerializer,
                             OperationNewSerializer, OperationHistorySerializer)
@@ -27,13 +27,14 @@ class AccountTypeFilter(django_filters.FilterSet):
 Customer
 """
 class CustomerViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'put', 'delete']
     queryset = CustomerModel.objects.all()
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['pesel', 'identification']
     ordering_fields = ['last_name']
         
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_udpate']:
+        if self.action in ['create', 'update']:
             return CustomerCUPSerializer
         else:
             return CustomerLRDSerializer
@@ -47,16 +48,20 @@ class CustomerViewSet(viewsets.ModelViewSet):
 Account
 """
 class AccountViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'put', 'delete']
     queryset = AccountModel.objects.all()
 
     def get_serializer_class(self):
-        if self.action == 'newoperation':
-            return OperationNewSerializer
-        if self.action in ['create', 'update', 'partial_udpate']:
-            return AccountCUPSerializer
-        else:
-            return AccountLRDSerializer
-        
+        match self.action:
+            case 'newoperation':
+                return OperationNewSerializer
+            case 'create':
+                return AccountCreateSerializer
+            case 'update':
+                return AccountUPSerializer
+            case default:
+                return AccountLRDSerializer
+
     def create(self, request, *args, **kwargs):
         data = OrderedDict(request.data)
         data['free_balance'] = data['debit']
@@ -69,10 +74,14 @@ class AccountViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        data = OrderedDict(request.data)
-        data['free_balance'] = float(data['debit']) + float(instance.balance)
-        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
+        data = OrderedDict(request.data)
+        data['free_balance'] = str(round(float(data['debit']) + float(instance.balance), 2))
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.fields['free_balance'].read_only = False
+        serializer.is_valid(raise_exception=True)
+        serializer.fields['free_balance'].read_only = True
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -80,7 +89,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         serializer.validated_data['created_employee'] = self.request.user
         return serializer.save()
 
-    @action(detail=True, methods=['get', 'patch'])
+    @action(detail=True, methods=['get', 'put'])
     def generate(self, request, pk=None):
         instance = self.get_object()
         if not instance.number_iban:
@@ -130,9 +139,7 @@ class AccountViewSet(viewsets.ModelViewSet):
             serializer.validated_data['balance_after_operation'] = balance_after_operation
             serializer.validated_data['operation_employee'] = self.request.user
             serializer.save()
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(AccountLRDSerializer(instance, context={'request': request}).data)
+        return Response(AccountLRDSerializer(instance, context={'request': request}).data)
 
     @action(detail=True, methods=['get'])
     def history(self, request, pk=None):
@@ -146,6 +153,7 @@ class AccountViewSet(viewsets.ModelViewSet):
 Account Type
 """
 class AccountTypeViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'put', 'delete']
     queryset = AccountTypeModel.objects.all()
     serializer_class = AccountTypeSerializer
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
@@ -157,6 +165,6 @@ class AccountTypeViewSet(viewsets.ModelViewSet):
 Parameter
 """
 class ParameterViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'put']
     queryset = ParameterModel.objects.all()
     serializer_class = ParameterSerializer
-    http_method_names = ['get', 'put', 'patch']
