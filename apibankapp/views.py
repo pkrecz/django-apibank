@@ -7,6 +7,7 @@ from django_filters import rest_framework as django_filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 from collections import OrderedDict
+from django.db.models import ProtectedError
 from .models import CustomerModel, AccountModel, AccountTypeModel, ParameterModel, OperationModel
 from .serializers import (
                             CustomerCUPSerializer, CustomerLRDSerializer,
@@ -38,7 +39,15 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return CustomerCUPSerializer
         else:
             return CustomerLRDSerializer
-    
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ProtectedError:
+            return Response({'message': 'You can not delete this record!'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def perform_create(self, serializer):
         serializer.validated_data['created_employee'] = self.request.user
         return serializer.save()
@@ -59,14 +68,16 @@ class AccountViewSet(viewsets.ModelViewSet):
                 return AccountCreateSerializer
             case 'update':
                 return AccountUPSerializer
-            case default:
+            case _:
                 return AccountLRDSerializer
 
     def create(self, request, *args, **kwargs):
         data = OrderedDict(request.data)
         data['free_balance'] = data['debit']
         serializer = self.get_serializer(data=data)
+        serializer.fields['free_balance'].read_only = False
         serializer.is_valid(raise_exception=True)
+        serializer.fields['free_balance'].read_only = True
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -84,6 +95,14 @@ class AccountViewSet(viewsets.ModelViewSet):
         serializer.fields['free_balance'].read_only = True
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ProtectedError:
+            return Response({'message': 'You can not delete this record!'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def perform_create(self, serializer):
         serializer.validated_data['created_employee'] = self.request.user
@@ -159,6 +178,14 @@ class AccountTypeViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     filterset_class = AccountTypeFilter
     ordering_fields = ['code']
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ProtectedError:
+            return Response({'message': 'You can not delete this record!'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 """
