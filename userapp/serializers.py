@@ -3,32 +3,24 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 
 
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    email = serializers.CharField(required=True)
+    password = serializers.CharField(style={'input': 'password'}, write_only=True, required=True)
     password_confirm = serializers.CharField(style={'input': 'password'}, write_only=True, required=True)
 
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password', 'password_confirm']
-        extra_kwargs = {
-            'password': {'write_only': True}}
-
-    def save(self):
-        password = self.validated_data['password']
-        account = User(username=self.validated_data['username'], email=self.validated_data['email'])
-        account.set_password(password)
-        account.save()
-        return account
-
-    def validate_password(self, value):
-        validate_password(value)
-        return value
-    
     def validate(self, data):
         if data['password'] != data['password_confirm']:
             raise serializers.ValidationError({'error': 'Passwords should be the same!'})
         if User.objects.filter(email=data['email']).exists():
             raise serializers.ValidationError({'error': 'E-mail already exists!'})
+        if User.objects.filter(username=data['username']).exists():
+            raise serializers.ValidationError({'error': 'Username already exists!'})
         return data
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -36,11 +28,11 @@ class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(style={'input': 'password'}, write_only=True, required=True)
     new_password_confirm = serializers.CharField(style={'input': 'password'}, write_only=True, required=True)
 
-    def validate_new_password(self, value):
-        validate_password(value)
-        return value
-
     def validate(self, data):
         if data['new_password'] != data['new_password_confirm']:
             raise serializers.ValidationError({'error': 'Passwords should be the same!'})      
         return data
+    
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value

@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
+from django.contrib.auth.models import User
 from .serializers import RegisterSerializer, ChangePasswordSerializer
 
 
@@ -15,9 +16,11 @@ def logout_view(request):
 def register_view(request):
     if request.method == 'POST':
         serializer = RegisterSerializer(data=request.data)
-        data = {}
         serializer.is_valid(raise_exception=True)
-        account = serializer.save()
+        account = User(username=serializer.validated_data['username'], email=serializer.validated_data['email'])
+        account.set_password(serializer.validated_data['password'])
+        account.save()
+        data = {}
         data['response'] = 'Registration done.'
         data['username'] = account.username
         data['email'] = account.email
