@@ -30,7 +30,9 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data['new_password'] != data['new_password_confirm']:
-            raise serializers.ValidationError({'error': 'Passwords should be the same!'})      
+            raise serializers.ValidationError({'error': 'Passwords should be the same!'})
+        if data['old_password'] == data['new_password']:
+            raise serializers.ValidationError({'error': 'Old and new passwords can not be the same!'})    
         return data
     
     def validate_new_password(self, value):
