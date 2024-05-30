@@ -4,6 +4,7 @@ __pycache__
 apibankenv
 apibankdb
 /static/
+/media/
 settings.py
 .DS_Store
 /.idea

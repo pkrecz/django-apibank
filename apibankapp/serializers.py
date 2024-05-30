@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomerModel, ParameterModel, AccountModel, AccountTypeModel, OperationModel
+from .models import (CustomerModel, ParameterModel, AccountModel, AccountTypeModel, OperationModel)
 
 
 """
@@ -15,9 +15,20 @@ class HyperlinkedGenerate(serializers.HyperlinkedIdentityField):
 """
 Customer
 """
-class CustomerCUPSerializer(serializers.HyperlinkedModelSerializer):
+class CustomerCreateSerializer(serializers.HyperlinkedModelSerializer):
     """
-    Actions: create & update & partial_udpate
+    Actions: create
+    """
+
+    class Meta:
+        model = CustomerModel
+        fields = '__all__'
+        read_only_fields = ('created_date', 'created_employee', 'avatar')
+
+
+class CustomerUpdateSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    Actions: update & partial_udpate
     """
 
     class Meta:
@@ -37,7 +48,7 @@ class CustomerLRDSerializer(serializers.HyperlinkedModelSerializer):
         fields = [
                     'url', 'first_name', 'last_name',
                     'address', 'postal_code', 'city',
-                    'pesel', 'birth_date', 'birth_city', 'identification',
+                    'pesel', 'birth_date', 'birth_city', 'identification', 'avatar',
                     'created_date', 'created_employee', 'account']
 
     def to_representation(self, instance):

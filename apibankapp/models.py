@@ -1,14 +1,23 @@
 # -*- coding: utf-8 -*-
 
+import os
+from django.conf import settings
 from django.db import models
-from django.core.validators import RegexValidator, MinValueValidator
-from django.core.exceptions import ValidationError
+from django.core.validators import (RegexValidator, MinValueValidator)
 
 
 """
 Customer Model
 """
 class CustomerModel(models.Model):
+
+    def get_upload_path(instance, filename):
+        dir_to_clear = os.path.join(settings.MEDIA_ROOT, 'image', 'avatar', str(instance.pk))
+        if os.path.exists(dir_to_clear):
+            files_to_remove = [os.path.join(dir_to_clear,f) for f in os.listdir(dir_to_clear)]
+            for f in files_to_remove:
+                os.remove(f)
+        return os.path.join('image', 'avatar', str(instance.pk), filename)
 
     id_customer = models.AutoField(
                                 primary_key=True)
@@ -31,6 +40,8 @@ class CustomerModel(models.Model):
                                 max_length=100)
     identification = models.CharField(
                                 max_length=9)
+    avatar = models.ImageField(
+                                upload_to=get_upload_path, blank=True, null=True)
     created_date = models.DateTimeField(
                                 auto_now_add=True)
     created_employee = models.CharField(

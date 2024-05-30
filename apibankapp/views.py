@@ -1,16 +1,19 @@
+import os
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework import filters 
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.parsers import (MultiPartParser, FormParser, JSONParser)
 from django_filters import rest_framework as django_filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
+from django.conf import settings
 from collections import OrderedDict
 from django.db.models import ProtectedError
-from .models import CustomerModel, AccountModel, AccountTypeModel, ParameterModel, OperationModel
+from .models import (CustomerModel, AccountModel, AccountTypeModel, ParameterModel, OperationModel)
 from .serializers import (
-                            CustomerCUPSerializer, CustomerLRDSerializer,
+                            CustomerCreateSerializer, CustomerUpdateSerializer, CustomerLRDSerializer,
                             AccountCreateSerializer, AccountUPSerializer, AccountLRDSerializer, AccountOperationSerializer,
                             AccountTypeSerializer,
                             ParameterSerializer,
@@ -29,16 +32,20 @@ Customer
 """
 class CustomerViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'put', 'delete']
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     queryset = CustomerModel.objects.all()
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['pesel', 'identification']
     ordering_fields = ['last_name']
-        
+       
     def get_serializer_class(self):
-        if self.action in ['create', 'update']:
-            return CustomerCUPSerializer
-        else:
-            return CustomerLRDSerializer
+        match self.action:
+            case 'create':
+                return CustomerCreateSerializer
+            case 'update':
+                return CustomerUpdateSerializer
+            case _:
+                return CustomerLRDSerializer
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -50,6 +57,17 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.validated_data['created_employee'] = self.request.user
+        return serializer.save()
+
+    def perform_update(self, serializer):
+        if serializer.validated_data['avatar'] is None:
+            instance = self.get_object()
+            dir_to_clear = os.path.join(settings.MEDIA_ROOT, 'image', 'avatar', str(instance.pk))
+            if os.path.exists(dir_to_clear):
+                files_to_remove = [os.path.join(dir_to_clear,f) for f in os.listdir(dir_to_clear)]
+                for f in files_to_remove:
+                    os.remove(f)
+                    os.rmdir(dir_to_clear)
         return serializer.save()
 
 

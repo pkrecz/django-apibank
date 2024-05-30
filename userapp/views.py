@@ -3,7 +3,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework import generics
 from django.contrib.auth.models import User
-from .serializers import RegisterSerializer, ChangePasswordSerializer
+from .serializers import (RegisterSerializer, ChangePasswordSerializer)
 
 
 class LogoutAPIView(generics.GenericAPIView):
