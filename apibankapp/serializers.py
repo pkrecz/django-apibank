@@ -77,7 +77,7 @@ class AccountCreateSerializer(serializers.HyperlinkedModelSerializer):
                             'created_date', 'created_employee')
 
 
-class AccountUPSerializer(serializers.HyperlinkedModelSerializer):
+class AccountUpdateSerializer(serializers.HyperlinkedModelSerializer):
     """
     Actions: update & partial_udpate
     """
@@ -98,7 +98,7 @@ class AccountUPSerializer(serializers.HyperlinkedModelSerializer):
         if value < 0:
             raise serializers.ValidationError('Free balance out of limit!')
         return value
-    
+
     def validate_number_iban(self, value):
         if len(value) != 28:
             raise serializers.ValidationError('IBAN should have 28 characters!')

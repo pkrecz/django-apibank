@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import pathlib
 from django.conf import settings
 from django.db import models
 from django.core.validators import (RegexValidator, MinValueValidator)
@@ -17,7 +18,9 @@ class CustomerModel(models.Model):
             files_to_remove = [os.path.join(dir_to_clear,f) for f in os.listdir(dir_to_clear)]
             for f in files_to_remove:
                 os.remove(f)
-        return os.path.join('image', 'avatar', str(instance.pk), filename)
+        file_extension = pathlib.Path(filename).suffix
+        file_name = 'avatar' + file_extension
+        return os.path.join('image', 'avatar', str(instance.pk), file_name)
 
     id_customer = models.AutoField(
                                 primary_key=True)

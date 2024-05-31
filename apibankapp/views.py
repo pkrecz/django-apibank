@@ -14,7 +14,7 @@ from django.db.models import ProtectedError
 from .models import (CustomerModel, AccountModel, AccountTypeModel, ParameterModel, OperationModel)
 from .serializers import (
                             CustomerCreateSerializer, CustomerUpdateSerializer, CustomerLRDSerializer,
-                            AccountCreateSerializer, AccountUPSerializer, AccountLRDSerializer, AccountOperationSerializer,
+                            AccountCreateSerializer, AccountUpdateSerializer, AccountLRDSerializer, AccountOperationSerializer,
                             AccountTypeSerializer,
                             ParameterSerializer,
                             OperationNewSerializer, OperationHistorySerializer)
@@ -31,7 +31,7 @@ class AccountTypeFilter(django_filters.FilterSet):
 Customer
 """
 class CustomerViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'put', 'delete']
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete']
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     queryset = CustomerModel.objects.all()
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -42,7 +42,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
         match self.action:
             case 'create':
                 return CustomerCreateSerializer
-            case 'update':
+            case 'update' | 'partial_update':
                 return CustomerUpdateSerializer
             case _:
                 return CustomerLRDSerializer
@@ -59,23 +59,12 @@ class CustomerViewSet(viewsets.ModelViewSet):
         serializer.validated_data['created_employee'] = self.request.user
         return serializer.save()
 
-    def perform_update(self, serializer):
-        if serializer.validated_data['avatar'] is None:
-            instance = self.get_object()
-            dir_to_clear = os.path.join(settings.MEDIA_ROOT, 'image', 'avatar', str(instance.pk))
-            if os.path.exists(dir_to_clear):
-                files_to_remove = [os.path.join(dir_to_clear,f) for f in os.listdir(dir_to_clear)]
-                for f in files_to_remove:
-                    os.remove(f)
-                    os.rmdir(dir_to_clear)
-        return serializer.save()
-
 
 """
 Account
 """
 class AccountViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'put', 'delete']
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete']
     queryset = AccountModel.objects.all()
 
     def get_serializer_class(self):
@@ -84,8 +73,8 @@ class AccountViewSet(viewsets.ModelViewSet):
                 return OperationNewSerializer
             case 'create':
                 return AccountCreateSerializer
-            case 'update':
-                return AccountUPSerializer
+            case 'update' | 'partial_update':
+                return AccountUpdateSerializer
             case _:
                 return AccountLRDSerializer
 
@@ -105,15 +94,16 @@ class AccountViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        data = OrderedDict(request.data)
-        data['free_balance'] = str(round(float(data['debit']) + float(instance.balance), 2))
-        serializer = self.get_serializer(instance, data=data, partial=partial)
-        serializer.fields['free_balance'].read_only = False
-        serializer.is_valid(raise_exception=True)
-        serializer.fields['free_balance'].read_only = True
+        if serializer.validated_data.get('debit', None) is not None:
+            data = OrderedDict(request.data)
+            data['free_balance'] = str(round(float(data['debit']) + float(instance.balance), 2))
+            serializer = self.get_serializer(instance, data=data, partial=partial)
+            serializer.fields['free_balance'].read_only = False
+            serializer.is_valid(raise_exception=True)
+            serializer.fields['free_balance'].read_only = True
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         try:
@@ -190,7 +180,7 @@ class AccountViewSet(viewsets.ModelViewSet):
 Account Type
 """
 class AccountTypeViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'put', 'delete']
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete']
     queryset = AccountTypeModel.objects.all()
     serializer_class = AccountTypeSerializer
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
