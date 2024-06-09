@@ -1,4 +1,3 @@
-import os
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework import filters 
@@ -8,7 +7,6 @@ from rest_framework.parsers import (MultiPartParser, FormParser, JSONParser)
 from django_filters import rest_framework as django_filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
-from django.conf import settings
 from collections import OrderedDict
 from django.db.models import ProtectedError
 from .models import (CustomerModel, AccountModel, AccountTypeModel, ParameterModel, OperationModel)
