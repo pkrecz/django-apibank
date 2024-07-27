@@ -114,7 +114,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         serializer.validated_data['created_employee'] = self.request.user
         return serializer.save()
 
-    @action(detail=True, methods=['get', 'put'])
+    @action(detail=True, methods=['get'])
     def generate(self, request, pk=None):
         instance = self.get_object()
         if not instance.number_iban:
@@ -172,6 +172,26 @@ class AccountViewSet(viewsets.ModelViewSet):
         queryset = OperationModel.objects.filter(id_account=instance.id_account).order_by('-operation_date')
         serializer = OperationHistorySerializer(queryset, context={'request': request}, many=True)
         return Response(data=serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def interest(self, request, pk=None):
+        data = AccountModel.objects.filter(balance__gt = 0, percent__gt = 0)
+        if data.exists():
+            with transaction.atomic():
+                counter = 0
+                for instance in data:
+                    interest = round(instance.balance * (instance.percent / 100),2)
+                    new_balance = instance.balance + interest
+                    new_free_balance = new_balance + instance.debit
+                    # Updating balance & free balance
+                    AccountModel.objects.filter(id_account=instance.id_account).update(balance=new_balance, free_balance=new_free_balance)
+                    # New object in OperationModel
+                    OperationModel.objects.create(type_operation = 3, value_operation = interest, balance_after_operation = new_balance, id_account = instance)
+                    counter += 1
+                msg = 'Interest for ' + str(counter) + ' account(s) has been recounted.'
+                return Response({'message': msg})
+        else:
+            return Response({'message': 'No accounts to be recounted.'})
 
 
 """

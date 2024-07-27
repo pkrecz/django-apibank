@@ -146,7 +146,8 @@ class OperationModel(models.Model):
     type_choice = [
                     ('', '--------'),
                     (1, 'Deposit'),
-                    (2, 'Withdrawal')]
+                    (2, 'Withdrawal'),
+                    (3, 'Interest')]
 
     id_operation = models.AutoField(
                                 primary_key=True)

@@ -164,6 +164,11 @@ class OperationNewSerializer(serializers.HyperlinkedModelSerializer):
     """
     Actions: new operation for account
     """
+    type_choice = [
+                    ('', '--------'),
+                    (1, 'Deposit'),
+                    (2, 'Withdrawal')]
+    type_operation = serializers.ChoiceField(choices=type_choice)
 
     class Meta:
         model = OperationModel
