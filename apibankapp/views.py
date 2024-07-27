@@ -186,7 +186,12 @@ class AccountViewSet(viewsets.ModelViewSet):
                     # Updating balance & free balance
                     AccountModel.objects.filter(id_account=instance.id_account).update(balance=new_balance, free_balance=new_free_balance)
                     # New object in OperationModel
-                    OperationModel.objects.create(type_operation = 3, value_operation = interest, balance_after_operation = new_balance, id_account = instance)
+                    OperationModel.objects.create(
+                                                    type_operation = 3,
+                                                    value_operation = interest,
+                                                    balance_after_operation = new_balance,
+                                                    operation_employee = self.request.user,
+                                                    id_account = instance)
                     counter += 1
                 msg = 'Interest for ' + str(counter) + ' account(s) has been recounted.'
                 return Response({'message': msg})
