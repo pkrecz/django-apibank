@@ -47,7 +47,7 @@ class CustomerLRDSerializer(serializers.HyperlinkedModelSerializer):
         model = CustomerModel
         fields = [
                     'url', 'first_name', 'last_name',
-                    'address', 'postal_code', 'city',
+                    'street', 'house', 'apartment', 'postal_code', 'city',
                     'pesel', 'birth_date', 'birth_city', 'identification', 'avatar',
                     'created_date', 'created_employee', 'account']
 

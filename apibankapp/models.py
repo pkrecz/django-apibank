@@ -28,8 +28,13 @@ class CustomerModel(models.Model):
                                 max_length=100)
     last_name = models.CharField(
                                 max_length=100)
-    address = models.CharField(
+    street = models.CharField(
                                 max_length=100)
+    house = models.CharField(
+                                max_length=10)
+    apartment = models.CharField(
+                                blank=True,
+                                max_length=10)
     postal_code = models.CharField(
                                 max_length=6,
                                 validators=[RegexValidator(regex='^[0-9]{2}-[0-9]{3}$')])
