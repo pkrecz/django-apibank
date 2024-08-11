@@ -4,7 +4,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from rest_framework import routers
-from .views import (CustomerViewSet, AccountViewSet, AccountTypeViewSet, ParameterViewSet)
+from .views import (CustomerViewSet, AccountViewSet, AccountTypeViewSet, ParameterViewSet, LogViewSet)
 
 
 router = routers.DefaultRouter()
@@ -12,6 +12,7 @@ router.register(r'customer', CustomerViewSet)
 router.register(r'account', AccountViewSet)
 router.register(r'accounttype', AccountTypeViewSet)
 router.register(r'parameter', ParameterViewSet)
+router.register(r'monitoring', LogViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),

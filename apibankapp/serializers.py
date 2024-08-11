@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import (CustomerModel, ParameterModel, AccountModel, AccountTypeModel, OperationModel)
+from .models import (CustomerModel, ParameterModel, AccountModel, AccountTypeModel, OperationModel, LogModel)
 
 
 """
@@ -23,7 +23,7 @@ class CustomerCreateSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CustomerModel
         fields = '__all__'
-        read_only_fields = ('created_date', 'created_employee', 'avatar')
+        read_only_fields = ['created_date', 'created_employee', 'avatar']
 
 
 class CustomerUpdateSerializer(serializers.HyperlinkedModelSerializer):
@@ -34,7 +34,7 @@ class CustomerUpdateSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CustomerModel
         fields = '__all__'
-        read_only_fields = ('created_date', 'created_employee')
+        read_only_fields = ['created_date', 'created_employee']
 
 
 class CustomerLRDSerializer(serializers.HyperlinkedModelSerializer):
@@ -72,9 +72,9 @@ class AccountCreateSerializer(serializers.HyperlinkedModelSerializer):
                     'balance', 'debit', 'free_balance', 'percent',
                     'created_date', 'created_employee',
                     'account_type', 'customer']
-        read_only_fields = (
+        read_only_fields = [
                             'number_iban', 'balance', 'free_balance',
-                            'created_date', 'created_employee')
+                            'created_date', 'created_employee']
 
 
 class AccountUpdateSerializer(serializers.HyperlinkedModelSerializer):
@@ -89,10 +89,10 @@ class AccountUpdateSerializer(serializers.HyperlinkedModelSerializer):
                     'balance', 'debit', 'free_balance', 'percent',
                     'created_date', 'created_employee',
                     'account_type', 'customer']
-        read_only_fields = (
+        read_only_fields = [
                             'number_iban', 'balance', 'free_balance',
                             'created_date', 'created_employee',
-                            'account_type', 'customer')
+                            'account_type', 'customer']
     
     def validate_free_balance(self, value):
         if value < 0:
@@ -173,7 +173,7 @@ class OperationNewSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = OperationModel
         fields = '__all__'
-        read_only_fields = ('id_operation', 'balance_after_operation', 'operation_date', 'operation_employee', 'id_account')
+        read_only_fields = ['id_operation', 'balance_after_operation', 'operation_date', 'operation_employee', 'id_account']
 
 
 class OperationHistorySerializer(serializers.HyperlinkedModelSerializer):
@@ -188,3 +188,13 @@ class OperationHistorySerializer(serializers.HyperlinkedModelSerializer):
                     'id_operation', 'type_operation',
                     'value_operation', 'balance_after_operation',
                     'operation_date', 'operation_employee']
+
+
+class LogMonitoringSerializer(serializers.ModelSerializer):
+    """
+    Actions: activity monitoring
+    """
+
+    class Meta:
+        model = LogModel
+        fields = '__all__'
