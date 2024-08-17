@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from rest_framework import serializers
 from .models import (CustomerModel, ParameterModel, AccountModel, AccountTypeModel, OperationModel, LogModel)
 
 
-"""
-Customized class
-"""
+""" Customized class """
 class HyperlinkedGenerate(serializers.HyperlinkedIdentityField):
     
     def get_url(self, *args):
@@ -12,13 +12,8 @@ class HyperlinkedGenerate(serializers.HyperlinkedIdentityField):
         return url + 'generate/'
 
 
-"""
-Customer
-"""
+""" Customer """
 class CustomerCreateSerializer(serializers.HyperlinkedModelSerializer):
-    """
-    Actions: create
-    """
 
     class Meta:
         model = CustomerModel
@@ -27,9 +22,6 @@ class CustomerCreateSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class CustomerUpdateSerializer(serializers.HyperlinkedModelSerializer):
-    """
-    Actions: update & partial_udpate
-    """
 
     class Meta:
         model = CustomerModel
@@ -38,9 +30,7 @@ class CustomerUpdateSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class CustomerLRDSerializer(serializers.HyperlinkedModelSerializer):
-    """
-    Actions: list & retrieve & destroy
-    """
+
     account = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='accountmodel-detail')
             
     class Meta:
@@ -51,64 +41,38 @@ class CustomerLRDSerializer(serializers.HyperlinkedModelSerializer):
                     'pesel', 'birth_date', 'birth_city', 'identification', 'avatar',
                     'created_date', 'created_employee', 'account']
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['full_name'] = instance.first_name + ' ' + instance.last_name
-        return representation
 
-
-"""
-Account
-"""
+""" Account """
 class AccountCreateSerializer(serializers.HyperlinkedModelSerializer):
-    """
-    Actions: create
-    """
 
     class Meta:
         model = AccountModel
         fields = [
-                    'url', 'number_iban',
-                    'balance', 'debit', 'free_balance', 'percent',
-                    'created_date', 'created_employee',
+                    'debit', 'free_balance', 'percent',
                     'account_type', 'customer']
         read_only_fields = [
-                            'number_iban', 'balance', 'free_balance',
-                            'created_date', 'created_employee']
+                            'free_balance']
 
 
 class AccountUpdateSerializer(serializers.HyperlinkedModelSerializer):
-    """
-    Actions: update & partial_udpate
-    """
 
     class Meta:
         model = AccountModel
         fields = [
-                    'url', 'number_iban',
-                    'balance', 'debit', 'free_balance', 'percent',
-                    'created_date', 'created_employee',
-                    'account_type', 'customer']
-        read_only_fields = [
-                            'number_iban', 'balance', 'free_balance',
-                            'created_date', 'created_employee',
-                            'account_type', 'customer']
-    
-    def validate_free_balance(self, value):
-        if value < 0:
-            raise serializers.ValidationError('Free balance out of limit!')
-        return value
+                    'balance', 'debit', 'percent']
+        read_only_fields = ['balance']
 
-    def validate_number_iban(self, value):
-        if len(value) != 28:
-            raise serializers.ValidationError('IBAN should have 28 characters!')
-        return value
+
+class AccountUpdateSecureSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AccountModel
+        fields = [
+                    'debit', 'free_balance', 'percent']
 
 
 class AccountLRDSerializer(serializers.HyperlinkedModelSerializer):
-    """
-    Actions: list & retrieve & destroy
-    """
+
     generate_link = HyperlinkedGenerate(view_name='accountmodel-detail')
 
     class Meta:
@@ -119,37 +83,33 @@ class AccountLRDSerializer(serializers.HyperlinkedModelSerializer):
                     'created_date', 'created_employee',
                     'account_type', 'customer']
         depth = 1
-    
+
 
 class AccountOperationSerializer(serializers.HyperlinkedModelSerializer):
-    """
-    Action: Update data after transaction
-    """
 
     class Meta:
         model = AccountModel
         fields = [
                     'balance', 'free_balance', 'debit']
 
-    def validate_free_balance(self, value):
-        if value < 0:
-            raise serializers.ValidationError('Value operation out of balance limit!')
-        return value
 
-
-"""
-Account Type
-"""
-class AccountTypeSerializer(serializers.HyperlinkedModelSerializer):
+""" Account Type """
+class AccountTypeCLRDSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = AccountTypeModel
         fields = '__all__'
 
 
-"""
-Parameter
-"""
+class AccountTypeUpdateSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = AccountTypeModel
+        fields = [
+                    'description', 'subaccount', 'percent']
+
+
+""" Parameter """
 class ParameterSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
@@ -157,13 +117,9 @@ class ParameterSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-"""
-Operation
-"""
+""" Operation """
 class OperationNewSerializer(serializers.HyperlinkedModelSerializer):
-    """
-    Actions: new operation for account
-    """
+
     type_choice = [
                     ('', '--------'),
                     (1, 'Deposit'),
@@ -172,14 +128,12 @@ class OperationNewSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = OperationModel
-        fields = '__all__'
-        read_only_fields = ['id_operation', 'balance_after_operation', 'operation_date', 'operation_employee', 'id_account']
+        fields = [
+                    'type_operation', 'value_operation']
 
 
 class OperationHistorySerializer(serializers.HyperlinkedModelSerializer):
-    """
-    Actions: list of history
-    """
+
     type_operation = serializers.CharField(source='get_type_operation_display')
 
     class Meta:
@@ -190,10 +144,15 @@ class OperationHistorySerializer(serializers.HyperlinkedModelSerializer):
                     'operation_date', 'operation_employee']
 
 
+class OperationInterestSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OperationModel
+        fields = '__all__'
+
+
+""" Log monitoring """
 class LogMonitoringSerializer(serializers.ModelSerializer):
-    """
-    Actions: activity monitoring
-    """
 
     class Meta:
         model = LogModel

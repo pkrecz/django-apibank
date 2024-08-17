@@ -6,11 +6,10 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.core.validators import (RegexValidator, MinValueValidator)
+from .validators import (validator_free_balance, validator_number_iban)
 
 
-"""
-Customer Model
-"""
+""" Customer Model """
 class CustomerModel(models.Model):
 
     def get_upload_path(instance, filename):
@@ -63,16 +62,15 @@ class CustomerModel(models.Model):
         super().save(*args, **kwargs)
 
 
-"""
-Account Model
-"""
+""" Account Model """
 class AccountModel(models.Model):
 
     id_account = models.AutoField(
                                 primary_key=True)
     number_iban = models.CharField(
                                 max_length=28,
-                                blank=True)
+                                blank=True,
+                                validators=[validator_number_iban])
     balance = models.DecimalField(
                                 max_digits=12,
                                 decimal_places=2,
@@ -80,16 +78,14 @@ class AccountModel(models.Model):
     debit = models.DecimalField(
                                 max_digits=12,
                                 decimal_places=2,
-                                default=0,
                                 validators=[MinValueValidator(Decimal(0))])
     free_balance = models.DecimalField(
                                 max_digits=12,
                                 decimal_places=2,
-                                default=0)
+                                validators=[validator_free_balance])
     percent = models.DecimalField(
                                 max_digits=4,
                                 decimal_places=2,
-                                default=0,
                                 validators=[MinValueValidator(Decimal(0))])
     created_date = models.DateTimeField(
                                 auto_now_add=True)
@@ -100,9 +96,7 @@ class AccountModel(models.Model):
     customer = models.ForeignKey('CustomerModel', related_name='Account', on_delete=models.PROTECT)
 
 
-"""
-AccountType Model
-"""
+""" AccountType Model """
 class AccountTypeModel(models.Model):
 
     id_account_type = models.AutoField(
@@ -119,7 +113,6 @@ class AccountTypeModel(models.Model):
     percent = models.DecimalField(
                                 max_digits=4,
                                 decimal_places=2,
-                                default=0,
                                 validators=[MinValueValidator(Decimal(0))])
 
     def save(self, *args, **kwargs):
@@ -127,9 +120,7 @@ class AccountTypeModel(models.Model):
         super().save(*args, **kwargs)
 
 
-"""
-Parameter Model
-"""
+""" Parameter Model """
 class ParameterModel(models.Model):
 
     id_parameter = models.AutoField(
@@ -146,9 +137,7 @@ class ParameterModel(models.Model):
         super().save(*args, **kwargs)
 
 
-"""
-Operation Model
-"""
+""" Operation Model """
 class OperationModel(models.Model):
 
     type_choice = [
@@ -163,8 +152,7 @@ class OperationModel(models.Model):
                                 choices=type_choice)
     value_operation = models.DecimalField(
                                 max_digits=12,
-                                decimal_places=2,
-                                default=0)
+                                decimal_places=2)
     balance_after_operation = models.DecimalField(
                                 max_digits=12,
                                 decimal_places=2)
@@ -176,9 +164,7 @@ class OperationModel(models.Model):
     id_account = models.ForeignKey('AccountModel', on_delete=models.PROTECT)
 
 
-"""
-Log Model
-"""
+""" Log Model """
 class LogModel(models.Model):
     
     id_log = models.AutoField(
