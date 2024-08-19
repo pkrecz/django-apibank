@@ -148,7 +148,9 @@ class OperationInterestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OperationModel
-        fields = '__all__'
+        fields = [
+                    'type_operation', 'value_operation',
+                    'balance_after_operation', 'id_account']
 
 
 """ Log monitoring """

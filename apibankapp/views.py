@@ -5,10 +5,10 @@ from rest_framework import status
 from rest_framework import filters 
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException
-from rest_framework.response import Response
 from rest_framework.parsers import (MultiPartParser, FormParser, JSONParser)
 from django_filters import rest_framework as django_filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import ProtectedError
 from collections import OrderedDict
@@ -50,11 +50,11 @@ class CustomerViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         try:
             self.perform_destroy(instance)
-            return Response({'message': 'Customer has been deleted.'}, status=status.HTTP_200_OK)
+            return JsonResponse(data={'message': 'Customer has been deleted.'}, status=status.HTTP_200_OK)
         except ProtectedError:
-            return Response({'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data={'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
         except APIException as exc:
-            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request, *args, **kwargs):
         try:
@@ -62,9 +62,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             instance = serializer.save(created_employee=self.request.user)
             return_serializer = CustomerLRDSerializer(instance, context={'request': request})
-            return Response(return_serializer.data, status=status.HTTP_201_CREATED)
+            return JsonResponse(data=return_serializer.data, status=status.HTTP_201_CREATED)
         except APIException as exc:
-            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
 
 """ Account """
@@ -83,7 +83,7 @@ class AccountViewSet(viewsets.ModelViewSet):
             case _:
                 return AccountLRDSerializer
 
-    @ActivityMonitoringClass('Create account')
+    @ActivityMonitoringClass()
     def create(self, request, *args, **kwargs):
         try:
             serializer = self.get_serializer(data=request.data)
@@ -95,11 +95,11 @@ class AccountViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             instance = serializer.save(created_employee=self.request.user)
             return_serializer = AccountLRDSerializer(instance, context={'request': request})
-            return Response(return_serializer.data, status=status.HTTP_201_CREATED)
+            return JsonResponse(data=return_serializer.data, status=status.HTTP_201_CREATED)
         except APIException as exc:
-            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    @ActivityMonitoringClass('Update account')
+    @ActivityMonitoringClass()
     def update(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
@@ -111,23 +111,23 @@ class AccountViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
             return_serializer = AccountLRDSerializer(instance, context={'request': request})
-            return Response(return_serializer.data, status=status.HTTP_200_OK)
+            return JsonResponse(data=return_serializer.data, status=status.HTTP_200_OK)
         except APIException as exc:
-            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    @ActivityMonitoringClass('Delete account')
+    @ActivityMonitoringClass()
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         try:
             self.perform_destroy(instance)
-            return Response({'message': 'Account has been deleted.'}, status=status.HTTP_200_OK)
+            return JsonResponse(data={'message': 'Account has been deleted.'}, status=status.HTTP_200_OK)
         except ProtectedError:
-            return Response({'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data={'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
         except APIException as exc:
-            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['get'])
-    @ActivityMonitoringClass('Generate IBAN')
+    @ActivityMonitoringClass()
     def generate(self, request, pk=None):
         instance = self.get_object()
         if not instance.number_iban:
@@ -147,14 +147,14 @@ class AccountViewSet(viewsets.ModelViewSet):
                 serializer.is_valid(raise_exception=True)
                 instance = serializer.save()
                 return_serializer = AccountLRDSerializer(instance, context={'request': request})
-                return Response(return_serializer.data, status=status.HTTP_200_OK)
+                return JsonResponse(data=return_serializer.data, status=status.HTTP_200_OK)
             except APIException as exc:
-                return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'message': 'IBAN number already exists.'}, status=status.HTTP_200_OK)
+            return JsonResponse({'message': 'IBAN number already exists.'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get', 'post'])
-    @ActivityMonitoringClass('New operation')
+    @ActivityMonitoringClass()
     def newoperation(self, request, pk=None):
         instance = self.get_object()
         if request.method == 'POST':
@@ -181,22 +181,25 @@ class AccountViewSet(viewsets.ModelViewSet):
                     # Creating new operation
                     serializer_operation.validated_data['id_account'] = instance
                     serializer_operation.validated_data['balance_after_operation'] = balance_after_operation
-                    serializer_operation.validated_data['operation_employee'] = self.request.user
-                    serializer_operation.save()
+                    serializer_operation.save(operation_employee=self.request.user)
             except APIException as exc:
-                return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
         return_serializer = AccountLRDSerializer(instance, context={'request': request})
-        return Response(return_serializer.data, status=status.HTTP_200_OK)
+        return JsonResponse(data=return_serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'])
     def history(self, request, pk=None):
         instance = self.get_object()
         queryset = OperationModel.objects.filter(id_account=instance.id_account).order_by('-operation_date')
-        serializer = OperationHistorySerializer(queryset, context={'request': request}, many=True)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-    
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = OperationHistorySerializer(page, many=True)
+            return self.get_paginated_response(data=serializer.data)
+        serializer = OperationHistorySerializer(queryset, many=True)
+        return JsonResponse(data=serializer.data, safe=False, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['get'])
-    @ActivityMonitoringClass('Interest counting')
+    @ActivityMonitoringClass()
     def interest(self, request, pk=None):
         data = AccountModel.objects.filter(balance__gt = 0, percent__gt = 0)
         if data.exists():
@@ -220,18 +223,17 @@ class AccountViewSet(viewsets.ModelViewSet):
                                             "type_operation": 3,
                                             "value_operation": interest,
                                             "balance_after_operation": new_balance,
-                                            "operation_employee": str(self.request.user),
                                             "id_account": instance.id_account}
                         serializer = OperationInterestSerializer(data=data_operation)
                         serializer.is_valid(raise_exception=True)
-                        serializer.save()
+                        serializer.save(operation_employee=self.request.user)
                         counter += 1
                     msg = 'Interest for ' + str(counter) + ' account(s) has been recounted.'
-                    return Response({'message': msg}, status=status.HTTP_200_OK)
+                    return JsonResponse(data={'message': msg}, status=status.HTTP_200_OK)
             except APIException as exc:
-                return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'message': 'No accounts to be recounted.'}, status=status.HTTP_200_OK)
+            return JsonResponse(data={'message': 'No accounts to be recounted.'}, status=status.HTTP_200_OK)
 
 
 """ Account Type """
@@ -253,9 +255,9 @@ class AccountTypeViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         try:
             self.perform_destroy(instance)
-            return Response({'message': 'Account type has been deleted.'}, status=status.HTTP_200_OK)
+            return JsonResponse(data={'message': 'Account type has been deleted.'}, status=status.HTTP_200_OK)
         except ProtectedError:
-            return Response({'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data={'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 """ Parameter """
