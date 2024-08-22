@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.response import Response
+from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 
 
@@ -14,7 +14,7 @@ class CustomLimitOffsetPagination(LimitOffsetPagination):
     max_limit = 50
 
     def get_paginated_response(self, data):
-        return Response({
+        return JsonResponse({
                             'count': self.count,
                             'next': self.get_next_link(),
                             'previous': self.get_previous_link(),

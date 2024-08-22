@@ -2,12 +2,9 @@
 
 from rest_framework import viewsets
 from rest_framework import status
-from rest_framework import filters 
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException
 from rest_framework.parsers import (MultiPartParser, FormParser, JSONParser)
-from django_filters import rest_framework as django_filters
-from django_filters.rest_framework import DjangoFilterBackend
 from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import ProtectedError
@@ -21,11 +18,7 @@ from .serializers import (
                             OperationNewSerializer, OperationHistorySerializer, OperationInterestSerializer,
                             LogMonitoringSerializer)
 from .decorators import ActivityMonitoringClass
-
-
-""" Customized class """
-class AccountTypeFilter(django_filters.FilterSet):
-    search = django_filters.CharFilter(field_name='code', lookup_expr="istartswith")
+from .filters import (CustomerFilter, AccountFilter, AccountTypeFilter, OperationFilter, LogFilter)
 
 
 """ Customer """
@@ -33,10 +26,11 @@ class CustomerViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'put', 'delete']
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     queryset = CustomerModel.objects.all()
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = CustomerFilter
     search_fields = ['pesel', 'identification']
-    ordering_fields = ['last_name']
-       
+    ordering_fields = ['last_name', 'first_name']
+    ordering = ['last_name']
+
     def get_serializer_class(self):
         match self.action:
             case 'create':
@@ -71,6 +65,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
 class AccountViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'put', 'delete']
     queryset = AccountModel.objects.all()
+    filterset_class = AccountFilter
+    search_fields = ['number_iban']
+    ordering_fields = ['number_iban']
 
     def get_serializer_class(self):
         match self.action:
@@ -187,17 +184,6 @@ class AccountViewSet(viewsets.ModelViewSet):
         return_serializer = AccountLRDSerializer(instance, context={'request': request})
         return JsonResponse(data=return_serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['get'])
-    def history(self, request, pk=None):
-        instance = self.get_object()
-        queryset = OperationModel.objects.filter(id_account=instance.id_account).order_by('-operation_date')
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = OperationHistorySerializer(page, many=True)
-            return self.get_paginated_response(data=serializer.data)
-        serializer = OperationHistorySerializer(queryset, many=True)
-        return JsonResponse(data=serializer.data, safe=False, status=status.HTTP_200_OK)
-
     @action(detail=False, methods=['get'])
     @ActivityMonitoringClass()
     def interest(self, request, pk=None):
@@ -240,8 +226,8 @@ class AccountViewSet(viewsets.ModelViewSet):
 class AccountTypeViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'put', 'delete']
     queryset = AccountTypeModel.objects.all()
-    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     filterset_class = AccountTypeFilter
+    search_fields = ['code', 'description']
     ordering_fields = ['code']
 
     def get_serializer_class(self):
@@ -260,6 +246,29 @@ class AccountTypeViewSet(viewsets.ModelViewSet):
             return JsonResponse(data={'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+""" Operation """
+class OperationViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get']
+    queryset = OperationModel.objects.all()
+    filterset_class = OperationFilter
+    search_fields = ['type_operation']
+    ordering_fields = ['operation_date']
+    ordering = ['-operation_date']
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            queryset = OperationModel.objects.filter(id_account=self.kwargs['pk']).order_by('-operation_date')
+            queryset = self.filter_queryset(queryset)
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = OperationHistorySerializer(page, context={'request': request}, many=True)
+                return self.get_paginated_response(data=serializer.data)
+            serializer = OperationHistorySerializer(queryset, context={'request': request}, many=True)
+            return JsonResponse(data=serializer.data, safe=False, status=status.HTTP_200_OK)
+        except APIException as exc:
+                return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
+
 """ Parameter """
 class ParameterViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'put']
@@ -272,3 +281,7 @@ class LogViewSet(viewsets.ModelViewSet):
     http_method_names = ['get']
     queryset = LogModel.objects.all().order_by('-date_log')
     serializer_class = LogMonitoringSerializer
+    filterset_class = LogFilter
+    search_fields = ['user_log']
+    ordering_fields = ['date_log', 'duration_log']
+    ordering = ['-duration_log']
