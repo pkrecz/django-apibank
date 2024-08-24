@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+import decimal
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException
 from rest_framework.parsers import (MultiPartParser, FormParser, JSONParser)
 from django.http import JsonResponse
+from django.http.response import HttpResponse
 from django.db import transaction
 from django.db.models import ProtectedError
 from collections import OrderedDict
+from openpyxl import Workbook
+from openpyxl.styles import (Border, Side, PatternFill, Font)
 from .models import (CustomerModel, AccountModel, AccountTypeModel, ParameterModel, OperationModel, LogModel)
 from .serializers import (
                             CustomerCreateSerializer, CustomerUpdateSerializer, CustomerLRDSerializer,
@@ -267,6 +272,67 @@ class OperationViewSet(viewsets.ModelViewSet):
             return JsonResponse(data=serializer.data, safe=False, status=status.HTTP_200_OK)
         except APIException as exc:
                 return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get'])
+    def export(self, request, pk=None):
+        side = Side(style='dashed', color='FF000000')
+        border_around = Border(left=side, right=side, top=side, bottom=side)
+        file_name = 'History_operations.xlsx'
+        fields = [
+                    'id_operation',
+                    'type_operation',
+                    'value_operation',
+                    'balance_after_operation',
+                    'operation_date']
+        data = OperationModel.objects.filter(id_account=self.kwargs['pk']).order_by('-operation_date').values_list(*fields)
+        data = self.filter_queryset(data)
+        if not data.exists():
+            return JsonResponse({'message': 'No data to be exported'}, status=status.HTTP_400_BAD_REQUEST)
+        response = HttpResponse(content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+        workbook = Workbook()
+        workbook.iso_dates = True
+        worksheet = workbook.active
+        worksheet.title = 'Operations'
+        # Column headers
+        headers = [
+                    'Id operation',
+                    'Typ of operation',
+                    'Value operation',
+                    'Balance after operation',
+                    'Operation date']
+        for column_number, column_title in enumerate(headers, 1):
+            cell = worksheet.cell(row=1, column=column_number)
+            cell.value = column_title
+            cell.font = Font(bold=True, italic=True)
+            cell.fill = PatternFill(fgColor='0000FFFF', fill_type='solid')
+            cell.border = border_around
+        # Cell data
+        for row_number, row in enumerate(data, 1):
+            for column_number, cell_value in enumerate(row, 1):
+                if type(cell_value) is datetime.datetime:
+                    cell_value = cell_value.replace(tzinfo=None)
+                    cell_value = cell_value.strftime('%d.%m.%Y %H:%M:%S')
+                if column_number == 2:
+                    match cell_value:
+                        case 1:
+                            cell_value = 'Deposit'
+                        case 2:
+                            cell_value = 'Withdrawal'
+                        case 3:
+                            cell_value = 'Interest'
+                cell = worksheet.cell(row=row_number+1, column=column_number)
+                cell.value = cell_value
+                cell.border = border_around
+                if type(cell_value) is decimal.Decimal:
+                    cell.number_format = '#,##0.00'
+        # AutoFit column width
+        for column in worksheet.columns:
+            max_length = max(len(str(cell.value)) for cell in column)
+            adjusted_width = (max_length + 2) * 1.1
+            worksheet.column_dimensions[column[0].column_letter].width = adjusted_width
+        workbook.save(response)
+        return response
 
 
 """ Parameter """
