@@ -109,14 +109,6 @@ class AccountTypeUpdateSerializer(serializers.HyperlinkedModelSerializer):
                     'description', 'subaccount', 'percent']
 
 
-""" Parameter """
-class ParameterSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = ParameterModel
-        fields = '__all__'
-
-
 """ Operation """
 class OperationNewSerializer(serializers.HyperlinkedModelSerializer):
 
@@ -151,6 +143,14 @@ class OperationInterestSerializer(serializers.ModelSerializer):
         fields = [
                     'type_operation', 'value_operation',
                     'balance_after_operation', 'id_account']
+
+
+""" Parameter """
+class ParameterSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = ParameterModel
+        fields = '__all__'
 
 
 """ Log monitoring """

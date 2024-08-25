@@ -25,7 +25,7 @@ class ActivityMonitoringClass:
             result = original_function(request, *args, **kwargs)
             if result.status_code in [200, 201]:
                 end_time = time()
-                duration = round(end_time - start_time,6)
+                duration = round(end_time - start_time, 6)
                 status_log = 'Success'
             else:
                 duration = 0
