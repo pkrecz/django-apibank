@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django_filters.rest_framework import (FilterSet, CharFilter, DateFilter, NumberFilter)
+from django_filters.rest_framework import FilterSet, CharFilter, DateFilter, NumberFilter
 
 
 class CustomerFilter(FilterSet):

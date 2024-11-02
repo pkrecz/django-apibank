@@ -1,19 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from rest_framework import serializers
-from .models import (CustomerModel, ParameterModel, AccountModel, AccountTypeModel, OperationModel, LogModel)
-
-
-""" Customized class """
-class HyperlinkedGenerate(serializers.HyperlinkedIdentityField):
-    
-    def get_url(self, *args):
-        url = super().get_url(*args)
-        return url + 'generate/'
+from .models import CustomerModel, ParameterModel, AccountModel, AccountTypeModel, OperationModel, LogModel
 
 
 """ Customer """
-class CustomerCreateSerializer(serializers.HyperlinkedModelSerializer):
+class CustomerCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomerModel
@@ -21,7 +13,7 @@ class CustomerCreateSerializer(serializers.HyperlinkedModelSerializer):
         read_only_fields = ['created_date', 'created_employee', 'avatar']
 
 
-class CustomerUpdateSerializer(serializers.HyperlinkedModelSerializer):
+class CustomerUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomerModel
@@ -29,21 +21,21 @@ class CustomerUpdateSerializer(serializers.HyperlinkedModelSerializer):
         read_only_fields = ['created_date', 'created_employee']
 
 
-class CustomerLRDSerializer(serializers.HyperlinkedModelSerializer):
+class CustomerLRDSerializer(serializers.ModelSerializer):
 
-    account = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='accountmodel-detail')
-            
+    customer_accounts = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='accounts-detail')
+
     class Meta:
         model = CustomerModel
         fields = [
-                    'url', 'first_name', 'last_name',
+                    'id_customer', 'first_name', 'last_name',
                     'street', 'house', 'apartment', 'postal_code', 'city',
                     'pesel', 'birth_date', 'birth_city', 'identification', 'avatar',
-                    'created_date', 'created_employee', 'account']
+                    'created_date', 'created_employee', 'customer_accounts']
 
 
 """ Account """
-class AccountCreateSerializer(serializers.HyperlinkedModelSerializer):
+class AccountCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountModel
@@ -54,7 +46,7 @@ class AccountCreateSerializer(serializers.HyperlinkedModelSerializer):
                             'free_balance']
 
 
-class AccountUpdateSerializer(serializers.HyperlinkedModelSerializer):
+class AccountUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountModel
@@ -71,21 +63,19 @@ class AccountUpdateSecureSerializer(serializers.ModelSerializer):
                     'debit', 'free_balance', 'percent']
 
 
-class AccountLRDSerializer(serializers.HyperlinkedModelSerializer):
-
-    generate_link = HyperlinkedGenerate(view_name='accountmodel-detail')
+class AccountLRDSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountModel
         fields = [
-                    'url', 'number_iban', 'generate_link',
+                    'id_account', 'number_iban',
                     'balance', 'debit', 'free_balance', 'percent',
                     'created_date', 'created_employee',
                     'account_type', 'customer']
         depth = 1
 
 
-class AccountOperationSerializer(serializers.HyperlinkedModelSerializer):
+class AccountOperationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountModel
@@ -94,14 +84,16 @@ class AccountOperationSerializer(serializers.HyperlinkedModelSerializer):
 
 
 """ Account Type """
-class AccountTypeCLRDSerializer(serializers.HyperlinkedModelSerializer):
+class AccountTypeCLRDSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountTypeModel
-        fields = '__all__'
+        fields = [
+                    'id_account_type',
+                    'code', 'description', 'subaccount', 'percent']
 
 
-class AccountTypeUpdateSerializer(serializers.HyperlinkedModelSerializer):
+class AccountTypeUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountTypeModel
@@ -110,7 +102,7 @@ class AccountTypeUpdateSerializer(serializers.HyperlinkedModelSerializer):
 
 
 """ Operation """
-class OperationNewSerializer(serializers.HyperlinkedModelSerializer):
+class OperationNewSerializer(serializers.ModelSerializer):
 
     type_choice = [
                     ('', '--------'),
@@ -124,7 +116,7 @@ class OperationNewSerializer(serializers.HyperlinkedModelSerializer):
                     'type_operation', 'value_operation']
 
 
-class OperationHistorySerializer(serializers.HyperlinkedModelSerializer):
+class OperationHistorySerializer(serializers.ModelSerializer):
 
     type_operation = serializers.CharField(source='get_type_operation_display')
 
@@ -146,7 +138,7 @@ class OperationInterestSerializer(serializers.ModelSerializer):
 
 
 """ Parameter """
-class ParameterSerializer(serializers.HyperlinkedModelSerializer):
+class ParameterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ParameterModel

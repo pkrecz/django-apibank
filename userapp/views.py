@@ -6,12 +6,18 @@ from rest_framework import generics
 from rest_framework.exceptions import APIException
 from django.contrib.auth.models import User
 from django.http import JsonResponse
-from .serializers import (RegisterSerializer, ChangePasswordSerializer)
+from .serializers import RegisterSerializer, ChangePasswordSerializer
 from apibankapp.decorators import ActivityMonitoringClass 
 
 
 class LogoutAPIView(generics.GenericAPIView):
     http_method_names = ['post']
+
+    def get_serializer_class(self):
+        pass
+
+    def get_serializer(self, *args, **kwargs):
+        pass
 
     @ActivityMonitoringClass(show_data=False)
     def post(self, request, *args, **kwargs):
@@ -21,6 +27,12 @@ class LogoutAPIView(generics.GenericAPIView):
 
 class RegisterAPIView(generics.GenericAPIView):
     http_method_names = ['post']
+
+    def get_serializer_class(self):
+        pass
+
+    def get_serializer(self, *args, **kwargs):
+        pass
 
     @ActivityMonitoringClass(show_data=False)
     def post(self, request, *args, **kwargs):
@@ -43,6 +55,12 @@ class RegisterAPIView(generics.GenericAPIView):
 
 class ChangePasswordAPIView(generics.GenericAPIView):
     http_method_names = ['post']
+
+    def get_serializer_class(self):
+        pass
+
+    def get_serializer(self, *args, **kwargs):
+        pass
 
     @ActivityMonitoringClass(show_data=False)
     def post(self, request, *args, **kwargs):

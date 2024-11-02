@@ -1,0 +1,69 @@
+services:
+
+
+  service_api:
+    build: .
+    image: apibank_api:1.0
+    env_file:
+      - ./.env
+    volumes:
+      - static-data:/home/apibank/app/staticfiles
+      - media-data:/home/apibank/app/mediafiles
+    environment:
+      MYSQL_DATABASE_HOST: 'service_db'
+    expose:
+      - "8000"
+    depends_on:
+      service_db:
+        condition: service_healthy
+    restart: always
+    networks:
+      - network-external
+      - network-internal
+
+
+  service_db:
+    image: mysql:8.0
+    env_file:
+      - ./.env
+    volumes:
+      - apibank-data:/var/lib/mysql/
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    expose: 
+      - "3306"
+    restart: always
+    healthcheck:
+      test: mysqladmin ping --host 127.0.0.1 --user=root --password=${MYSQL_ROOT_PASSWORD}
+      interval: 5s
+      timeout: 10s
+      retries: 6
+    networks:
+      - network-internal
+
+
+  service_nginx:
+    build: ./nginx
+    volumes:
+      - static-data:/home/apibank/app/staticfiles
+      - media-data:/home/apibank/app/mediafiles
+    ports:
+      - "80:80"
+    depends_on:
+      - service_api
+    restart: always
+    networks:
+      - network-external
+      - network-internal
+
+
+volumes:
+  apibank-data:
+  static-data:
+  media-data:
+
+
+networks:
+  network-external:
+  network-internal:

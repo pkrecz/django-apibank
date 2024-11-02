@@ -5,8 +5,8 @@ import pathlib
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
-from django.core.validators import (RegexValidator, MinValueValidator)
-from .validators import (validator_free_balance, validator_number_iban)
+from django.core.validators import RegexValidator, MinValueValidator
+from .validators import validator_free_balance, validator_number_iban
 
 
 """ Customer Model """
@@ -92,8 +92,8 @@ class AccountModel(models.Model):
     created_employee = models.CharField(
                                 max_length=50)
 
-    account_type = models.ForeignKey('AccountTypeModel', on_delete=models.PROTECT)
-    customer = models.ForeignKey('CustomerModel', related_name='Account', on_delete=models.PROTECT)
+    account_type = models.ForeignKey('AccountTypeModel', related_name='accounttype_accounts', on_delete=models.PROTECT)
+    customer = models.ForeignKey('CustomerModel', related_name='customer_accounts', on_delete=models.PROTECT)
 
 
 """ AccountType Model """
@@ -161,7 +161,7 @@ class OperationModel(models.Model):
     operation_employee = models.CharField(
                                 max_length=50)
     
-    id_account = models.ForeignKey('AccountModel', on_delete=models.PROTECT)
+    id_account = models.ForeignKey('AccountModel', related_name='account_operations', on_delete=models.PROTECT)
 
 
 """ Log Model """
