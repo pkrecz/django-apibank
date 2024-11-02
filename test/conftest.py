@@ -104,3 +104,26 @@ def data_test_withdrawal_account():
     return {
         "type_operation": 2,
         "value_operation": 50}
+
+
+# Preparing dat for authentication test
+@pytest.fixture
+def data_test_register():
+    return {
+        "username": "fake_user",
+        "email": "fake_user@example.com",
+        "password": "pass100@test",
+        "password_confirm": "pass100@test"}
+
+@pytest.fixture
+def data_test_login():
+    return {
+        "username": "fake_user",
+        "password": "pass100@test"}
+
+@pytest.fixture
+def data_test_change_password():
+    return {
+        "old_password": "pass100@test",
+        "new_password": "pass100@new",
+        "new_password_confirm": "pass100@new"}

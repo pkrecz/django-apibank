@@ -14,6 +14,7 @@ from django.db.models import ProtectedError
 from collections import OrderedDict
 from openpyxl import Workbook
 from openpyxl.styles import Border, Side, PatternFill, Font
+from drf_yasg.utils import swagger_auto_schema
 from .models import CustomerModel, AccountModel, AccountTypeModel, ParameterModel, OperationModel, LogModel
 from .serializers import (
                             CustomerCreateSerializer, CustomerUpdateSerializer, CustomerLRDSerializer,
@@ -361,6 +362,10 @@ class ParameterViewSet(viewsets.ModelViewSet):
     queryset = ParameterModel.objects.all()
     serializer_class = ParameterSerializer
 
+    @swagger_auto_schema(auto_schema=None)
+    def list(self, request, *args, **kwargs):
+        return JsonResponse(data={'message': 'Method is not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
     def create(self, request, *args, **kwargs):
         if ParameterModel.objects.count() != 0:
             return JsonResponse(data={'message': 'Data already exists.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -385,3 +390,7 @@ class LogViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(auto_schema=None)
+    def retrieve(self, request, *args, **kwargs):
+        return JsonResponse(data={'message': 'Method is not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)

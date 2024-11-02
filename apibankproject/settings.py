@@ -70,7 +70,9 @@ DATABASES = {
         'USER': env('DB_USER'),
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': env('MYSQL_DATABASE_HOST', default='localhost'),
-        'PORT': env('MYSQL_DATABASE_PORT')}
+        'PORT': env('MYSQL_DATABASE_PORT'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",}}
 }
 
 

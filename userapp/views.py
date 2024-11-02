@@ -11,7 +11,7 @@ from apibankapp.decorators import ActivityMonitoringClass
 
 
 class LogoutAPIView(generics.GenericAPIView):
-    http_method_names = ['post']
+    http_method_names = ['delete']
 
     def get_serializer_class(self):
         pass
@@ -20,19 +20,14 @@ class LogoutAPIView(generics.GenericAPIView):
         pass
 
     @ActivityMonitoringClass(show_data=False)
-    def post(self, request, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         request.user.auth_token.delete()
-        return JsonResponse(status=status.HTTP_200_OK)
+        return JsonResponse(data = {'message': 'Logout successfully.'}, status=status.HTTP_200_OK)
 
 
 class RegisterAPIView(generics.GenericAPIView):
     http_method_names = ['post']
-
-    def get_serializer_class(self):
-        pass
-
-    def get_serializer(self, *args, **kwargs):
-        pass
+    serializer_class = RegisterSerializer
 
     @ActivityMonitoringClass(show_data=False)
     def post(self, request, *args, **kwargs):
@@ -50,20 +45,15 @@ class RegisterAPIView(generics.GenericAPIView):
             data['token'] = token.key
             return JsonResponse(data=data, status=status.HTTP_201_CREATED)
         except APIException as exc:
-            return JsonResponse(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordAPIView(generics.GenericAPIView):
-    http_method_names = ['post']
-
-    def get_serializer_class(self):
-        pass
-
-    def get_serializer(self, *args, **kwargs):
-        pass
+    http_method_names = ['put']
+    serializer_class = ChangePasswordSerializer
 
     @ActivityMonitoringClass(show_data=False)
-    def post(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         try:
             serializer = ChangePasswordSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -75,4 +65,4 @@ class ChangePasswordAPIView(generics.GenericAPIView):
             else:
                 return JsonResponse({'error': 'Incorrect old password.'}, status=status.HTTP_400_BAD_REQUEST)
         except APIException as exc:
-            return JsonResponse(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
