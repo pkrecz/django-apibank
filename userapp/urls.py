@@ -6,8 +6,8 @@ from .views import LogoutAPIView, RegisterAPIView, ChangePasswordAPIView
 
 
 urlpatterns = [
-    path(route='login/', view=obtain_auth_token, name='login'),
-    path(route='logout/', view=LogoutAPIView.as_view(), name='logout'),
-    path(route='register/', view=RegisterAPIView.as_view(), name='register'),
-    path(route='change-password/', view=ChangePasswordAPIView.as_view(), name='change-password'),
+    path(route="login/", view=obtain_auth_token, name="login"),
+    path(route="logout/", view=LogoutAPIView.as_view(), name="logout"),
+    path(route="register/", view=RegisterAPIView.as_view(), name="register"),
+    path(route="change-password/", view=ChangePasswordAPIView.as_view(), name="change-password"),
 ]

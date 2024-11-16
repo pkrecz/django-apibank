@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import os
-import pathlib
+import uuid
 from decimal import Decimal
-from django.conf import settings
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator
 from .validators import validator_free_balance, validator_number_iban
@@ -13,14 +12,11 @@ from .validators import validator_free_balance, validator_number_iban
 class CustomerModel(models.Model):
 
     def get_upload_path(instance, filename):
-        dir_to_clear = os.path.join(settings.MEDIA_ROOT, 'image', 'avatar', str(instance.pk))
-        if os.path.exists(dir_to_clear):
-            files_to_remove = [os.path.join(dir_to_clear,f) for f in os.listdir(dir_to_clear)]
-            for f in files_to_remove:
-                os.remove(f)
-        file_extension = pathlib.Path(filename).suffix
-        file_name = 'avatar' + file_extension
-        return os.path.join('image', 'avatar', str(instance.pk), file_name)
+        file_name = uuid.uuid4().hex
+        file_extension = filename.split('.').pop()
+        file_name_full = f"{file_name}.{file_extension}"
+        file_path = os.path.join("image", "avatars", file_name_full)
+        return file_path
 
     id_customer = models.AutoField(
                                 primary_key=True)
@@ -92,8 +88,8 @@ class AccountModel(models.Model):
     created_employee = models.CharField(
                                 max_length=50)
 
-    account_type = models.ForeignKey('AccountTypeModel', related_name='accounttype_accounts', on_delete=models.PROTECT)
-    customer = models.ForeignKey('CustomerModel', related_name='customer_accounts', on_delete=models.PROTECT)
+    account_type = models.ForeignKey("AccountTypeModel", related_name="accounttype_accounts", on_delete=models.PROTECT)
+    customer = models.ForeignKey("CustomerModel", related_name="customer_accounts", on_delete=models.PROTECT)
 
 
 """ AccountType Model """
@@ -141,10 +137,10 @@ class ParameterModel(models.Model):
 class OperationModel(models.Model):
 
     type_choice = [
-                    ('', '--------'),
-                    (1, 'Deposit'),
-                    (2, 'Withdrawal'),
-                    (3, 'Interest')]
+                    ("", "--------"),
+                    (1, "Deposit"),
+                    (2, "Withdrawal"),
+                    (3, "Interest")]
 
     id_operation = models.AutoField(
                                 primary_key=True)
@@ -161,7 +157,7 @@ class OperationModel(models.Model):
     operation_employee = models.CharField(
                                 max_length=50)
     
-    id_account = models.ForeignKey('AccountModel', related_name='account_operations', on_delete=models.PROTECT)
+    id_account = models.ForeignKey("AccountModel", related_name="account_operations", on_delete=models.PROTECT)
 
 
 """ Log Model """

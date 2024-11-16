@@ -15,11 +15,11 @@ class ExceptionMiddleware(object):
 
     def process_exception(self, request, exception):
         data = {
-            'code': 'server_error',
-            'message': ('Internal server error.'),
-            'error': {
-                'type': str(type(exception)),
-                'message': str(exception)
+            "code": "server_error",
+            "message": ("Internal server error."),
+            "error": {
+                "type": str(type(exception)),
+                "message": str(exception)
             }
         }
         return JsonResponse(data=data, status=status.HTTP_400_BAD_REQUEST)

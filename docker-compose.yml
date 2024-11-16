@@ -2,15 +2,19 @@ services:
 
 
   service_api:
-    build: .
+    build:
+      context: .
+      args:
+        STATIC_ROOT: ${STATIC_ROOT}
+        MEDIA_ROOT: ${MEDIA_ROOT}
     image: apibank_api:1.0
     env_file:
       - ./.env
-    volumes:
-      - static-data:/home/apibank/app/staticfiles
-      - media-data:/home/apibank/app/mediafiles
     environment:
-      MYSQL_DATABASE_HOST: 'service_db'
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+    volumes:
+      - static-data:/home/apibank/app/${STATIC_ROOT}
+      - media-data:/home/apibank/app/${MEDIA_ROOT}
     expose:
       - "8000"
     depends_on:
@@ -23,19 +27,22 @@ services:
 
 
   service_db:
-    image: mysql:8.0
+    image: postgres:17.0-bookworm
     env_file:
       - ./.env
     volumes:
-      - apibank-data:/var/lib/mysql/
+      - apibank-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      - POSTGRES_DATABASE=${POSTGRES_DATABASE}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
     expose: 
-      - "3306"
+      - "5432"
     restart: always
     healthcheck:
-      test: mysqladmin ping --host 127.0.0.1 --user=root --password=${MYSQL_ROOT_PASSWORD}
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}'"]
       interval: 5s
       timeout: 10s
       retries: 6
@@ -46,8 +53,8 @@ services:
   service_nginx:
     build: ./nginx
     volumes:
-      - static-data:/home/apibank/app/staticfiles
-      - media-data:/home/apibank/app/mediafiles
+      - static-data:/home/apibank/app/${STATIC_ROOT}
+      - media-data:/home/apibank/app/${MEDIA_ROOT}
     ports:
       - "80:80"
     depends_on:

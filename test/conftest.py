@@ -6,31 +6,39 @@ from django.contrib.auth.models import User
 
 
 # Preparing envoirment for testing
-@pytest.fixture
+@pytest.fixture()
 def db_no_rollback(request, django_db_setup, django_db_blocker):
     django_db_blocker.unblock()
     request.addfinalizer(django_db_blocker.restore)
 
-@pytest.fixture
+
+@pytest.fixture()
 def db_access_without_rollback_and_truncate(request, django_db_setup, django_db_blocker):
     django_db_blocker.unblock()
     yield
     django_db_blocker.restore()
 
+
 @pytest.fixture(autouse=True)
 def enable_db_access_for_all_tests(db): 
     pass
 
-@pytest.fixture
+
+@pytest.fixture()
 def client_test():
-    user = User.objects.create_superuser(username='test_user', password='test_password')
+    user = User.objects.create_superuser(username="test_user", password="test_password")
     api_client = APIClient()
     api_client.force_authenticate(user=user)
     return api_client
 
 
 # Preparing sample data
-@pytest.fixture
+def data_test_file():
+    file = open("./test/image_example.jpg", "rb")
+    return file
+
+
+@pytest.fixture()
 def data_test_create_customer():
     return {
             "first_name": "John",
@@ -43,9 +51,11 @@ def data_test_create_customer():
             "pesel": "89071203452",
             "birth_date": "1989-07-12",
             "birth_city": "New York",
-            "identification": "ABX9234"}
+            "identification": "ABX9234",
+            "avatar": data_test_file()}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_update_customer():
     return {
             "first_name": "Arnold",
@@ -58,9 +68,11 @@ def data_test_update_customer():
             "pesel": "89071203452",
             "birth_date": "1989-07-12",
             "birth_city": "New York",
-            "identification": "ABX9234"}
+            "identification": "ABX9234",
+            "avatar": data_test_file()}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_create_accounttype():
     return {
             "code": "S-01",
@@ -68,38 +80,44 @@ def data_test_create_accounttype():
             "subaccount": "994500",
             "percent": 7.35}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_update_accounttype():
     return {
             "description": "Standard account",
             "subaccount": "037540",
             "percent": 7.55}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_create_parameter():
     return {
             "country_code": "PL",
             "bank_number": "10101397"}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_create_account():
     return {
             "debit": 1000,
             "percent": 1.25}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_update_account():
     return {
             "debit": 50,
             "percent": 1.85}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_deposit_account():
     return {
         "type_operation": 1,
         "value_operation": 100}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_withdrawal_account():
     return {
         "type_operation": 2,
@@ -107,7 +125,7 @@ def data_test_withdrawal_account():
 
 
 # Preparing dat for authentication test
-@pytest.fixture
+@pytest.fixture()
 def data_test_register():
     return {
         "username": "fake_user",
@@ -115,13 +133,15 @@ def data_test_register():
         "password": "pass100@test",
         "password_confirm": "pass100@test"}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_login():
     return {
         "username": "fake_user",
         "password": "pass100@test"}
 
-@pytest.fixture
+
+@pytest.fixture()
 def data_test_change_password():
     return {
         "old_password": "pass100@test",

@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import os
-import environ
+import dj_database_url
+from dotenv import load_dotenv
 from pathlib import Path
 
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Initiate related env class & take variables from .env file
-env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-SECRET_KEY = env('SECRET_KEY')
-DEBUG = env.bool('DEBUG', default='False')
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG', default=False)
+ALLOWED_HOSTS = list(os.getenv('ALLOWED_HOSTS').split(' '))
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -64,16 +64,7 @@ WSGI_APPLICATION = 'apibankproject.wsgi.application'
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': env('MYSQL_DATABASE'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('MYSQL_DATABASE_HOST', default='localhost'),
-        'PORT': env('MYSQL_DATABASE_PORT'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",}}
-}
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL_LOCAL'))}
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -96,13 +87,13 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / str(os.getenv('STATIC_ROOT'))
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static/'),]
 
 
 # Media settings
 MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'mediafiles'
+MEDIA_ROOT = BASE_DIR / str(os.getenv('MEDIA_ROOT'))
 
 
 # Default primary key field type

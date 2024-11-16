@@ -11,7 +11,7 @@ class RegisterErrorClass:
         data_log = json.dumps(request.data)
         action = self.action
         function = self.__class__.__name__
-        status_log = 'Failed'
+        status_log = "Failed"
         data = {
                 "action_log": action,
                 "function_log": function,

@@ -3,6 +3,7 @@
 **/__pycache__
 apibankenv
 /media*
+/staticfiles
 /.idea
 /.pytest_cache
 **/.git

@@ -18,7 +18,7 @@ class ActivityMonitoringClass:
             user_log = str(request.request.user)
             data_log = json.dumps(request.request.data)
             if not self.show_data:
-                data_log = 'Data restricted'
+                data_log = "Data restricted"
             start_time = time()
             action = original_function.__name__
             function = request.__class__.__name__
@@ -26,10 +26,10 @@ class ActivityMonitoringClass:
             if result.status_code in [200, 201]:
                 end_time = time()
                 duration = round(end_time - start_time, 6)
-                status_log = 'Success'
+                status_log = "Success"
             else:
                 duration = 0
-                status_log = 'Failed'
+                status_log = "Failed"
             data = {
                     "action_log": action,
                     "function_log": function,

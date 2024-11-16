@@ -24,24 +24,24 @@ from .serializers import (
                             OperationNewSerializer, OperationHistorySerializer, OperationInterestSerializer,
                             LogMonitoringSerializer)
 from .decorators import ActivityMonitoringClass
-from .filters import CustomerFilter, AccountFilter, AccountTypeFilter, OperationFilter, LogFilter
+from .filters import CustomerFilter, AccountFilter, AccountTypeFilter, LogFilter
 
 
 """ Customer """
 class CustomerViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'put', 'delete']
+    http_method_names = ["get", "post", "put", "delete"]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     queryset = CustomerModel.objects.all()
     filterset_class = CustomerFilter
-    search_fields = ['pesel', 'identification']
-    ordering_fields = ['last_name', 'first_name']
-    ordering = ['last_name']
+    search_fields = ["pesel", "identification"]
+    ordering_fields = ["last_name", "first_name"]
+    ordering = ["last_name"]
 
     def get_serializer_class(self):
         match self.action:
-            case 'create':
+            case "create":
                 return CustomerCreateSerializer
-            case 'update':
+            case "update":
                 return CustomerUpdateSerializer
             case _:
                 return CustomerLRDSerializer
@@ -54,7 +54,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             instance = serializer.save(created_employee=self.request.user)
-            return_serializer = CustomerLRDSerializer(instance, context={'request': request})
+            return_serializer = CustomerLRDSerializer(instance, context={"request": request})
             return JsonResponse(data=return_serializer.data, status=status.HTTP_201_CREATED)
         except APIException as exc:
             return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
@@ -69,28 +69,28 @@ class CustomerViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         try:
             self.perform_destroy(instance)
-            return JsonResponse(data={'message': 'Customer has been deleted.'}, status=status.HTTP_200_OK)
+            return JsonResponse(data={"message": "Customer has been deleted."}, status=status.HTTP_200_OK)
         except ProtectedError:
-            return JsonResponse(data={'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data={"message": "Deletion impossible. This record has referenced data!"}, status=status.HTTP_400_BAD_REQUEST)
         except APIException as exc:
             return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
 
 """ Account """
 class AccountViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'put', 'delete']
+    http_method_names = ["get", "post", "put", "delete"]
     queryset = AccountModel.objects.all()
     filterset_class = AccountFilter
-    search_fields = ['number_iban']
-    ordering_fields = ['number_iban']
+    search_fields = ["number_iban"]
+    ordering_fields = ["number_iban"]
 
     def get_serializer_class(self):
         match self.action:
-            case 'newoperation':
+            case "newoperation":
                 return OperationNewSerializer
-            case 'create':
+            case "create":
                 return AccountCreateSerializer
-            case 'update':
+            case "update":
                 return AccountUpdateSerializer
             case _:
                 return AccountLRDSerializer
@@ -104,12 +104,12 @@ class AccountViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = OrderedDict(request.data)
-            data['free_balance'] = data['debit']
+            data["free_balance"] = data["debit"]
             serializer = self.get_serializer(data=data)
-            serializer.fields['free_balance'].read_only = False
+            serializer.fields["free_balance"].read_only = False
             serializer.is_valid(raise_exception=True)
             instance = serializer.save(created_employee=self.request.user)
-            return_serializer = AccountLRDSerializer(instance, context={'request': request})
+            return_serializer = AccountLRDSerializer(instance, context={"request": request})
             return JsonResponse(data=return_serializer.data, status=status.HTTP_201_CREATED)
         except APIException as exc:
             return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
@@ -124,11 +124,11 @@ class AccountViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(instance, data=request.data)
             serializer.is_valid(raise_exception=True)
             data = OrderedDict(request.data)
-            data['free_balance'] = str(round(float(data['debit']) + float(instance.balance), 2))
+            data["free_balance"] = str(round(float(data["debit"]) + float(instance.balance), 2))
             serializer = AccountUpdateSecureSerializer(instance, data=data)
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
-            return_serializer = AccountLRDSerializer(instance, context={'request': request})
+            return_serializer = AccountLRDSerializer(instance, context={"request": request})
             return JsonResponse(data=return_serializer.data, status=status.HTTP_200_OK)
         except APIException as exc:
             return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
@@ -138,13 +138,13 @@ class AccountViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         try:
             self.perform_destroy(instance)
-            return JsonResponse(data={'message': 'Account has been deleted.'}, status=status.HTTP_200_OK)
+            return JsonResponse(data={"message": "Account has been deleted."}, status=status.HTTP_200_OK)
         except ProtectedError:
-            return JsonResponse(data={'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data={"message": "Deletion impossible. This record has referenced data!"}, status=status.HTTP_400_BAD_REQUEST)
         except APIException as exc:
             return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     @ActivityMonitoringClass()
     def generate(self, request, pk=None):
         instance = self.get_object()
@@ -161,99 +161,99 @@ class AccountViewSet(viewsets.ModelViewSet):
                     prefix_zero += '0'
                 iban = country_code + bank_number + subaccount + account + prefix_zero + customer
                 # Saving IBAN number
-                serializer = AccountLRDSerializer(instance, data={'number_iban': iban}, partial=True)
+                serializer = AccountLRDSerializer(instance, data={"number_iban": iban}, partial=True)
                 serializer.is_valid(raise_exception=True)
                 instance = serializer.save()
-                return_serializer = AccountLRDSerializer(instance, context={'request': request})
+                return_serializer = AccountLRDSerializer(instance, context={"request": request})
                 return JsonResponse(data=return_serializer.data, status=status.HTTP_200_OK)
             except APIException as exc:
                 return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return JsonResponse({'message': 'IBAN number already exists.'}, status=status.HTTP_200_OK)
+            return JsonResponse({"message": "IBAN number already exists."}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     @ActivityMonitoringClass()
     def newoperation(self, request, pk=None):
         instance = self.get_object()
-        if request.method == 'POST':
+        if request.method == "POST":
             try:
                 with transaction.atomic():
                     serializer_operation = OperationNewSerializer(data=request.data)
                     serializer_operation.is_valid(raise_exception=True)
                     # Choosing operation type
-                    if serializer_operation.validated_data['type_operation'] == 2:
-                        serializer_operation.validated_data['value_operation'] = serializer_operation.validated_data['value_operation'] * (-1)
+                    if serializer_operation.validated_data["type_operation"] == 2:
+                        serializer_operation.validated_data["value_operation"] = serializer_operation.validated_data["value_operation"] * (-1)
                     # Getting data from account
                     balance = AccountModel.objects.get(id_account=instance.id_account).balance
                     debit = AccountModel.objects.get(id_account=instance.id_account).debit
                     # Calculating balance & free_balance after transaction
-                    balance_after_operation = balance + serializer_operation.validated_data['value_operation']
+                    balance_after_operation = balance + serializer_operation.validated_data["value_operation"]
                     free_balance_after_operation = balance_after_operation + debit
                     # Updating balance & free balance for account
                     data_account = {
-                            'balance': balance_after_operation,
-                            'free_balance': free_balance_after_operation}
+                            "balance": balance_after_operation,
+                            "free_balance": free_balance_after_operation}
                     serializer_account = AccountOperationSerializer(instance, data=data_account, partial=True)
                     serializer_account.is_valid(raise_exception=True)
                     instance = serializer_account.save()
                     # Creating new operation
-                    serializer_operation.validated_data['id_account'] = instance
-                    serializer_operation.validated_data['balance_after_operation'] = balance_after_operation
+                    serializer_operation.validated_data["id_account"] = instance
+                    serializer_operation.validated_data["balance_after_operation"] = balance_after_operation
                     serializer_operation.save(operation_employee=self.request.user)
             except APIException as exc:
                 return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
-        return_serializer = AccountLRDSerializer(instance, context={'request': request})
+        return_serializer = AccountLRDSerializer(instance, context={"request": request})
         return JsonResponse(data=return_serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def operations(self, request, pk=None):
         instance = self.get_object()
         try:
-            queryset = OperationModel.objects.filter(id_account=instance.id_account).order_by('-operation_date')
+            queryset = OperationModel.objects.filter(id_account=instance.id_account).order_by("-operation_date")
             queryset = self.filter_queryset(queryset)
             page = self.paginate_queryset(queryset)
             if page is not None:
-                serializer = OperationHistorySerializer(page, context={'request': request}, many=True)
+                serializer = OperationHistorySerializer(page, context={"request": request}, many=True)
                 return self.get_paginated_response(data=serializer.data)
-            serializer = OperationHistorySerializer(queryset, context={'request': request}, many=True)
+            serializer = OperationHistorySerializer(queryset, context={"request": request}, many=True)
             return JsonResponse(data=serializer.data, safe=False, status=status.HTTP_200_OK)
         except APIException as exc:
                 return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def export(self, request, pk=None):
-        side = Side(style='dashed', color='FF000000')
+        side = Side(style="dashed", color="FF000000")
         border_around = Border(left=side, right=side, top=side, bottom=side)
-        file_name = 'History_operations.xlsx'
+        file_name = "History_operations.xlsx"
         fields = [
-                    'id_operation',
-                    'type_operation',
-                    'value_operation',
-                    'balance_after_operation',
-                    'operation_date']
+                    "id_operation",
+                    "type_operation",
+                    "value_operation",
+                    "balance_after_operation",
+                    "operation_date"]
         instance = self.get_object()
-        data = OperationModel.objects.filter(id_account=instance.id_account).order_by('-operation_date').values_list(*fields)
+        data = OperationModel.objects.filter(id_account=instance.id_account).order_by("-operation_date").values_list(*fields)
         data = self.filter_queryset(data)
         if not data.exists():
-            return JsonResponse({'message': 'No data to be exported'}, status=status.HTTP_400_BAD_REQUEST)
-        response = HttpResponse(content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = f'attachment; filename={file_name}'
+            return JsonResponse({"message": "No data to be exported"}, status=status.HTTP_400_BAD_REQUEST)
+        response = HttpResponse(content_type="application/vnd.ms-excel")
+        response["Content-Disposition"] = f"attachment; filename={file_name}"
         workbook = Workbook()
         workbook.iso_dates = True
         worksheet = workbook.active
-        worksheet.title = 'Operations'
+        worksheet.title = "Operations"
         # Column headers
         headers = [
-                    'Id operation',
-                    'Typ of operation',
-                    'Value operation',
-                    'Balance after operation',
-                    'Operation date']
+                    "Id operation",
+                    "Typ of operation",
+                    "Value operation",
+                    "Balance after operation",
+                    "Operation date"]
         for column_number, column_title in enumerate(headers, 1):
             cell = worksheet.cell(row=1, column=column_number)
             cell.value = column_title
             cell.font = Font(bold=True, italic=True)
-            cell.fill = PatternFill(fgColor='0000FFFF', fill_type='solid')
+            cell.fill = PatternFill(fgColor="0000FFFF", fill_type="solid")
             cell.border = border_around
         # Cell data
         for row_number, row in enumerate(data, 1):
@@ -264,16 +264,16 @@ class AccountViewSet(viewsets.ModelViewSet):
                 if column_number == 2:
                     match cell_value:
                         case 1:
-                            cell_value = 'Deposit'
+                            cell_value = "Deposit"
                         case 2:
-                            cell_value = 'Withdrawal'
+                            cell_value = "Withdrawal"
                         case 3:
-                            cell_value = 'Interest'
+                            cell_value = "Interest"
                 cell = worksheet.cell(row=row_number+1, column=column_number)
                 cell.value = cell_value
                 cell.border = border_around
                 if type(cell_value) is decimal.Decimal:
-                    cell.number_format = '#,##0.00'
+                    cell.number_format = "#,##0.00"
         # AutoFit column width
         for column in worksheet.columns:
             max_length = max(len(str(cell.value)) for cell in column)
@@ -282,7 +282,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         workbook.save(response)
         return response
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     @ActivityMonitoringClass()
     def interest(self, request, pk=None):
         data = AccountModel.objects.filter(balance__gt = 0, percent__gt = 0)
@@ -312,25 +312,25 @@ class AccountViewSet(viewsets.ModelViewSet):
                         serializer.is_valid(raise_exception=True)
                         serializer.save(operation_employee=self.request.user)
                         counter += 1
-                    msg = 'Interest for ' + str(counter) + ' account(s) has been recounted.'
-                    return JsonResponse(data={'message': msg}, status=status.HTTP_200_OK)
+                    msg = f"Interest for {counter} account(s) has been recounted."
+                    return JsonResponse(data={"message": msg}, status=status.HTTP_200_OK)
             except APIException as exc:
                 return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return JsonResponse(data={'message': 'No accounts to be recounted.'}, status=status.HTTP_200_OK)
+            return JsonResponse(data={"message": "No accounts to be recounted."}, status=status.HTTP_200_OK)
 
 
 """ Account Type """
 class AccountTypeViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'put', 'delete']
+    http_method_names = ["get", "post", "put", "delete"]
     queryset = AccountTypeModel.objects.all()
     filterset_class = AccountTypeFilter
-    search_fields = ['code', 'description']
-    ordering_fields = ['code']
+    search_fields = ["code", "description"]
+    ordering_fields = ["code"]
 
     def get_serializer_class(self):
         match self.action:
-            case 'update':
+            case "update":
                 return AccountTypeUpdateSerializer
             case _:
                 return AccountTypeCLRDSerializer
@@ -351,24 +351,24 @@ class AccountTypeViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         try:
             self.perform_destroy(instance)
-            return JsonResponse(data={'message': 'Account type has been deleted.'}, status=status.HTTP_200_OK)
+            return JsonResponse(data={"message": "Account type has been deleted."}, status=status.HTTP_200_OK)
         except ProtectedError:
-            return JsonResponse(data={'message': 'Deletion impossible. This record has referenced data!'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data={"message": "Deletion impossible. This record has referenced data!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 """ Parameter """
 class ParameterViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'put']
+    http_method_names = ["get", "post", "put"]
     queryset = ParameterModel.objects.all()
     serializer_class = ParameterSerializer
 
     @swagger_auto_schema(auto_schema=None)
     def list(self, request, *args, **kwargs):
-        return JsonResponse(data={'message': 'Method is not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return JsonResponse(data={"message": "Method is not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def create(self, request, *args, **kwargs):
         if ParameterModel.objects.count() != 0:
-            return JsonResponse(data={'message': 'Data already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(data={"message": "Data already exists."}, status=status.HTTP_400_BAD_REQUEST)
         return super().create(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
@@ -380,17 +380,17 @@ class ParameterViewSet(viewsets.ModelViewSet):
 
 """ Log """
 class LogViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get']
-    queryset = LogModel.objects.all().order_by('-date_log')
+    http_method_names = ["get"]
+    queryset = LogModel.objects.all().order_by("-date_log")
     serializer_class = LogMonitoringSerializer
     filterset_class = LogFilter
-    search_fields = ['user_log']
-    ordering_fields = ['date_log', 'duration_log']
-    ordering = ['-duration_log']
+    search_fields = ["user_log"]
+    ordering_fields = ["date_log", "duration_log"]
+    ordering = ["-duration_log"]
 
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     @swagger_auto_schema(auto_schema=None)
     def retrieve(self, request, *args, **kwargs):
-        return JsonResponse(data={'message': 'Method is not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return JsonResponse(data={"message": "Method is not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)

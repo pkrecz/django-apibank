@@ -5,6 +5,7 @@
 apibankenv
 apibankdb
 /media*
+/staticfiles
 .DS_Store
 /.idea
 **/.env
