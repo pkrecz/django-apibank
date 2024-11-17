@@ -5,7 +5,7 @@ import uuid
 from decimal import Decimal
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator
-from .validators import validator_free_balance, validator_number_iban
+from .validators import validator_free_balance, validator_number_iban, validator_file_size
 
 
 """ Customer Model """
@@ -47,7 +47,8 @@ class CustomerModel(models.Model):
     avatar = models.ImageField(
                                 upload_to=get_upload_path,
                                 blank=True,
-                                null=True)
+                                null=True,
+                                validators=[validator_file_size])
     created_date = models.DateTimeField(
                                 auto_now_add=True)
     created_employee = models.CharField(
