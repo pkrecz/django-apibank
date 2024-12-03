@@ -12,7 +12,7 @@ def sub_test_register(client, input_data):
 	response_json = response.json()
 	logging.info("Register testing ...")
 	assert response.status_code == 201
-	assert response_json["username"] == "fake_user"
+	assert response_json["username"] == input_data["username"]
 	assert response_json["token"] is not None
 	logging.info("Register testing finished.")
 

@@ -90,13 +90,6 @@ def data_test_update_accounttype():
 
 
 @pytest.fixture()
-def data_test_create_parameter():
-    return {
-            "country_code": "PL",
-            "bank_number": "10101397"}
-
-
-@pytest.fixture()
 def data_test_create_account():
     return {
             "debit": 1000,

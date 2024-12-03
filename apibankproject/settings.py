@@ -122,5 +122,8 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',],
     
     'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',],
-}
+        'rest_framework.renderers.JSONRenderer',],}
+
+
+SWAGGER_SETTINGS = {
+    "DEFAULT_AUTO_SCHEMA_CLASS": "apibankapp.custom.CustomAutoSchema"}

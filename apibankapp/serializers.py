@@ -42,25 +42,15 @@ class AccountCreateSerializer(serializers.ModelSerializer):
         fields = [
                     "debit", "free_balance", "percent",
                     "account_type", "customer"]
-        read_only_fields = [
-                            "free_balance"]
+        read_only_fields = ["free_balance"]
 
 
 class AccountUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountModel
-        fields = [
-                    "balance", "debit", "percent"]
-        read_only_fields = ["balance"]
-
-
-class AccountUpdateSecureSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = AccountModel
-        fields = [
-                    "debit", "free_balance", "percent"]
+        fields = ["debit", "free_balance", "percent"]
+        read_only_fields = ["free_balance"]
 
 
 class AccountLRDSerializer(serializers.ModelSerializer):
@@ -79,8 +69,7 @@ class AccountOperationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountModel
-        fields = [
-                    "balance", "free_balance", "debit"]
+        fields = ["balance", "free_balance", "debit"]
 
 
 """ Account Type """
@@ -97,8 +86,7 @@ class AccountTypeUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AccountTypeModel
-        fields = [
-                    "description", "subaccount", "percent"]
+        fields = ["description", "subaccount", "percent"]
 
 
 """ Operation """
@@ -112,8 +100,7 @@ class OperationNewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OperationModel
-        fields = [
-                    "type_operation", "value_operation"]
+        fields = ["type_operation", "value_operation"]
 
 
 class OperationHistorySerializer(serializers.ModelSerializer):
