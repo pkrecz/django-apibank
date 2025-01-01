@@ -2,8 +2,7 @@
 *~
 **/__pycache__
 /.pytest_cache
-apibankenv
-apibankdb
+/env
 /media*
 /staticfiles
 .DS_Store
