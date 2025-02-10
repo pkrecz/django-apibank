@@ -12,6 +12,7 @@ services:
       - ./.env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+      - REDIS_URL=redis://service_redis:6379/
     volumes:
       - static-data:/home/apibank/app/${STATIC_ROOT}
       - media-data:/home/apibank/app/${MEDIA_ROOT}
@@ -19,6 +20,8 @@ services:
       - "8000"
     depends_on:
       service_db:
+        condition: service_healthy
+      service_redis:
         condition: service_healthy
     restart: always
     networks:
@@ -37,7 +40,6 @@ services:
       - POSTGRES_DATABASE=${POSTGRES_DATABASE}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-
     expose: 
       - "5432"
     restart: always
@@ -62,6 +64,20 @@ services:
     restart: always
     networks:
       - network-external
+
+
+  service_redis:
+    image: redis:7.0
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+      start_period: 3s
+    expose:
+      - "6379"
+    volumes:
+      - redis-data:/data
+    networks:
       - network-internal
 
 
@@ -69,6 +85,7 @@ volumes:
   apibank-data:
   static-data:
   media-data:
+  redis-data:
 
 
 networks:
