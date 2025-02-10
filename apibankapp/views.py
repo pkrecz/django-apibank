@@ -142,7 +142,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         except APIException as exc:
             return JsonResponse(data=exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["post"])
     @ActivityMonitoringClass()
     def generate(self, request, pk=None):
         instance = self.get_object()
@@ -279,7 +279,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         workbook.save(response)
         return response
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["post"])
     @ActivityMonitoringClass()
     def interest(self, request, pk=None):
         data = AccountModel.objects.filter(balance__gt = 0, percent__gt = 0)

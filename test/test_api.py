@@ -139,7 +139,7 @@ def sub_test_update_account(client, input_data):
 def sub_test_generate_iban_account(client):
 	id_account = os.environ["ACCOUNT_ID"]
 	url = reverse("accounts-detail", kwargs={"pk": int(id_account)})
-	response = client.get(path=url + "generate/")
+	response = client.post(path=url + "generate/")
 	response_json = response.json()
 	logging.info("Generating IBAN testing ...")
 	assert response.status_code == 200
@@ -202,7 +202,7 @@ def sub_test_get_withdrawal_operation(client):
 
 def sub_test_interest_counting(client, result):
 	url = reverse("accounts-list")
-	response = client.get(path=url + "interest/")
+	response = client.post(path=url + "interest/")
 	response_json = response.json()
 	logging.info("Interest operation testing ...")
 	assert response.status_code == 200
